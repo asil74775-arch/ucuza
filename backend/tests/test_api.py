@@ -1,0 +1,97 @@
+import json
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+
+from app.main import app
+from scripts.seed import seed
+
+
+@pytest.fixture(scope="session")
+async def client():
+    await seed(demo=True)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
+        r = await c.post("/auth/register", json={"email": "a@b.co", "password": "sifre1234",
+                                                 "display_name": "Ayşe", "interests": ["gaming", "budget"]})
+        c.headers["Authorization"] = f"Bearer {r.json()['token']}"
+        yield c
+
+
+async def test_home_and_category(client):
+    home = (await client.get("/home")).json()
+    assert home["sections"] and home["for_you"]
+    cats = (await client.get("/categories")).json()
+    tel = next(c for c in cats if c["slug"] == "telefon")
+    cheap = (await client.get("/products", params={"category_id": tel["id"], "sort": "cheapest"})).json()
+    assert cheap[0]["price"] <= cheap[-1]["price"]
+    nfc = (await client.get("/products", params={"category_id": tel["id"],
+                                                 "specs": json.dumps({"nfc": True, "ram_gb": {"min": 8}})})).json()
+    assert all("Generic" not in p["name"] for p in nfc)
+    facets = (await client.get(f"/categories/{tel['id']}/facets")).json()
+    assert any(f["key"] == "ram_gb" for f in facets["specs"])
+
+
+async def test_product_detail_history_reviews(client):
+    lst = (await client.get("/products", params={"q": "X-Phone"})).json()
+    pid = lst[0]["id"]
+    d = (await client.get(f"/products/{pid}")).json()
+    assert d["chronic_issues"] and "Yüksek Riskli" in d["badges"] and not d["is_chronic_free"]
+    assert d["fake_reviews_removed"] > 0
+    h = (await client.get(f"/products/{pid}/history")).json()
+    assert len(h["prices"]) > 10 and h["ratings"]
+    revs = (await client.get(f"/products/{pid}/reviews")).json()
+    assert all(not r["is_hidden"] for r in revs)
+
+
+async def test_accessory_flow(client):
+    cats = {c["slug"]: c for c in (await client.get("/categories")).json()}
+    pc = cats["bilgisayar"]["id"]
+    brands = (await client.get("/accessories/brands", params={"category_id": pc})).json()
+    lenovo = next(b for b in brands if b["name"] == "Lenovo")
+    models = (await client.get("/accessories/models", params={"category_id": pc, "brand_id": lenovo["id"],
+                                                               "q": "15IAX9"})).json()
+    types = (await client.get("/accessories/types", params={"device_id": models[0]["id"]})).json()
+    assert any(t["slug"] == "ram" for t in types) and not any(t["slug"] == "kilif" for t in types)
+    res = (await client.get("/accessories/compatible", params={"device_id": models[0]["id"],
+                                                               "accessory_category_id": cats["ram"]["id"]})).json()
+    names = [r["name"] for r in res["results"]]
+    assert any("DDR5" in n and "SO-DIMM" in n for n in names)
+    assert not any("DDR4" in n or "DIMM (Masaüstü)" in n for n in names)
+
+
+async def test_ai_features_fallback(client):
+    m = (await client.post("/ai/mission", json={"text": "Bana 1500 TL altındaki en iyi kablosuz kulaklığı bul"})).json()
+    assert 1 <= len(m["top3"]) <= 3 and all(p["price"] <= 1500 for p in m["top3"])
+    assert all(p["strength"] for p in m["top3"])
+    sb = (await client.post("/ai/should-buy", json={"product_query": "X-Phone", "budget": 20000, "needs": "oyun"})).json()
+    assert sb["verdict"] == "ALMA"
+    duel = (await client.post("/ai/duel", json={"a_query": "iPhone 15", "b_query": "Galaxy S24"})).json()
+    assert duel["rounds"] and duel["overall_winner"] in ("a", "b")
+    iphone = (await client.get("/products", params={"q": "iPhone 15"})).json()[0]
+    alts = (await client.get(f"/products/{iphone['id']}/alternatives")).json()
+    assert all(a["price"] < iphone["price"] for a in alts)
+    s = (await client.post("/ai/sessions", json={"mode": "general"})).json()
+    msg = (await client.post(f"/ai/sessions/{s['id']}/chat", json={"text": "1500 TL altında kulaklık öner"})).json()
+    assert msg["role"] == "model" and msg["text"]
+    proj = (await client.post("/ai/project", json={"title": "Oyun köşesi", "description": "oyuncu mouse, çalışma masası",
+                                                   "budget": 10000})).json()
+    assert proj["items"] and not proj["over_budget"]
+    cart = (await client.get("/cart")).json()
+    assert cart["items"]
+
+
+async def test_social_and_messages(client):
+    pid = (await client.get("/products", params={"q": "Galaxy S24"})).json()[0]["id"]
+    e = await client.post("/experiences", data={"product_id": pid, "text": "2 aydır kullanıyorum, çok memnunum", "rating": 5})
+    assert e.status_code == 200
+    assert (await client.get("/explore")).json()
+    assert (await client.get(f"/products/{pid}/experiences")).json()
+    q = (await client.post(f"/products/{pid}/questions", json={"text": "Şarj süresi ne kadar?"})).json()
+    a = (await client.post(f"/questions/{q['id']}/answers", json={"text": "Yaklaşık 1 saat"})).json()
+    assert a["is_owner"]  # deneyim paylaşan kullanıcı sahip sayılır
+    other = await AsyncClient(transport=ASGITransport(app=app), base_url="http://t").post(
+        "/auth/register", json={"email": "b@b.co", "password": "sifre1234", "display_name": "Mehmet"})
+    conv = (await client.post("/conversations", json={"user_id": other.json()["user"]["id"], "text": "Merhaba!"})).json()
+    msgs = (await client.get(f"/conversations/{conv['id']}/messages")).json()
+    assert msgs[0]["text"] == "Merhaba!"
+    assert (await client.post("/profile/events", json={"kind": "purchase", "product_id": pid})).json()["ok"]

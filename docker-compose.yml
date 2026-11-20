@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kiyaslio
+      POSTGRES_PASSWORD: kiyaslio
+      POSTGRES_DB: kiyaslio
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kiyaslio"]
+      interval: 5s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+  api:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_started}
+    ports: ["8000:8000"]
+    volumes: [media:/data/media]
+  # Günlük yorum/fiyat yenileme (fiyat geçmişi, puan geçmişi, kronik sorun güncellemesi)
+  refresher:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on: [api]
+    command: ["sh", "-c", "while true; do python -m scripts.refresh_all; sleep 86400; done"]
+volumes:
+  pgdata:
+  media:

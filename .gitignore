@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+media/
+*.db
+.pytest_cache/
+mobile/.dart_tool/
+mobile/build/
+mobile/android/key.properties
+mobile/android/app/*.jks
+mobile/android/app/google-services.json
+mobile/*.iml
+mobile/.flutter-plugins*
