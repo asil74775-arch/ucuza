@@ -1,14 +1,14 @@
 # Puanlama Yöntemi
 
-Ucuza.com'daki tüm puan ve etiketler, **aynı kurallarla, her ürüne eşit şekilde ve otomatik olarak** hesaplanır. Hiçbir marka veya satıcı ücret karşılığı daha iyi puan alamaz.
+FiyatRadar'daki tüm puan ve etiketler, **aynı kurallarla, her ürüne eşit şekilde ve otomatik olarak** hesaplanır. Hiçbir marka veya satıcı ücret karşılığı daha iyi puan alamaz.
 
 ## Veri kaynakları
 - **Platform puanları:** anlaşmalı satıcı/ortaklık kaynaklarından alınan puan ortalaması ve puan sayısı. Bu platformlardaki yorum metinleri alınmaz.
-- **Ucuza.com kullanıcı yorumları:** uygulama kullanıcılarının yazdığı yorumlar. Her kullanıcı bir ürüne yalnızca bir yorum yazabilir.
+- **FiyatRadar kullanıcı yorumları:** uygulama kullanıcılarının yazdığı yorumlar. Her kullanıcı bir ürüne yalnızca bir yorum yazabilir.
 - **Fiyatlar:** satıcı tekliflerinden günlük olarak kaydedilir.
 
 ## Genel puan
-Platform puanları ile Ucuza.com kullanıcı puanlarının, puan sayısına göre ağırlıklı ortalamasıdır.
+Platform puanları ile FiyatRadar kullanıcı puanlarının, puan sayısına göre ağırlıklı ortalamasıdır.
 
 ## Sahte yorum tespiti
 Kopya veya birbirine çok benzeyen metinler, sponsorluk/hediye ifadeleri, aynı gün olağandışı yorum yığılması, çok kısa ve genel övgüler gibi ölçülebilir sinyallerle (ve yazarın rızası varsa yapay zeka ile) bir olasılık hesaplanır. Olasılığı yüksek olan yorumlar gösterilmez ve puana katılmaz.

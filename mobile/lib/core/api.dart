@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Derleme sırasında: flutter build appbundle --dart-define=API_URL=https://api.ucuza.com
+/// Derleme sırasında: flutter build appbundle --dart-define=API_URL=https://api.fiyatradar.net.tr
 const apiUrl = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:8000');
 
 String get wsUrl => apiUrl.replaceFirst('http', 'ws');

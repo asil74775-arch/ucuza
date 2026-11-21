@@ -38,10 +38,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: const Icon(Icons.compare_arrows, color: Colors.white),
               ),
               const SizedBox(width: 10),
-              Text('Ucuza.com', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+              Text('FiyatRadar', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
             ]),
             const SizedBox(height: 24),
-            Text('Doğru ürünü, doğru fiyata.', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+            Text('Radarına al, en iyisini seç.', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             const Text('Yapay zeka yorumları tarar, sahte yorumları ayıklar, kronik sorunları bulur ve sana en iyi seçimi söyler. '
                 'Önce seni tanıyalım — nelerle ilgilenirsin?'),

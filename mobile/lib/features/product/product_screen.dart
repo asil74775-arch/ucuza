@@ -199,7 +199,7 @@ class _Header extends StatelessWidget {
           Stars((p['rating'] ?? 0).toDouble(), size: 18, count: p['rating_count']),
           const SizedBox(width: 6),
           const Tooltip(
-            message: 'Platform puanları ve Ucuza.com kullanıcı yorumlarının, puan sayısına göre ağırlıklı ortalaması',
+            message: 'Platform puanları ve FiyatRadar kullanıcı yorumlarının, puan sayısına göre ağırlıklı ortalaması',
             child: Icon(Icons.info_outline, size: 16),
           ),
           const Spacer(),
@@ -328,7 +328,7 @@ class _OffersSection extends StatelessWidget {
       const SectionTitle('Satıcılar', icon: Icons.storefront),
       const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Text('Ortaklık bağlantısıdır: bu bağlantılardan alışveriş yaparsanız Ucuza.com komisyon alabilir. '
+        child: Text('Ortaklık bağlantısıdır: bu bağlantılardan alışveriş yaparsanız FiyatRadar komisyon alabilir. '
             'Fiyatlar gecikmeli olabilir; güncel fiyat satıcı sitesindedir.', style: TextStyle(fontSize: 11, color: Colors.grey)),
       ),
       for (final o in offers)
@@ -478,7 +478,7 @@ class _ChronicSection extends StatelessWidget {
   }
 }
 
-/// Dış platformlardan alınan YALNIZCA puan ve puan sayısı + Ucuza.com kullanıcı puanı.
+/// Dış platformlardan alınan YALNIZCA puan ve puan sayısı + FiyatRadar kullanıcı puanı.
 class _PlatformRatings extends StatelessWidget {
   const _PlatformRatings(this.p);
   final Map<String, dynamic> p;
@@ -500,7 +500,7 @@ class _PlatformRatings extends StatelessWidget {
           ListTile(
             dense: true,
             leading: const Icon(Icons.verified_user),
-            title: const Text('Ucuza.com kullanıcıları'),
+            title: const Text('FiyatRadar kullanıcıları'),
             subtitle: const Text('Yapay zeka ile analiz edilmiş, sahte yorumlar hariç'),
             trailing: (p['review_count'] ?? 0) > 0
                 ? Stars((p['ai_rating'] ?? 0).toDouble(), size: 13, count: p['review_count'])
@@ -510,7 +510,7 @@ class _PlatformRatings extends StatelessWidget {
       ),
       const Padding(
         padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
-        child: Text('Diğer platformlardan yalnızca puan ortalaması ve puan sayısı alınır; yorumlar Ucuza.com kullanıcılarına aittir.',
+        child: Text('Diğer platformlardan yalnızca puan ortalaması ve puan sayısı alınır; yorumlar FiyatRadar kullanıcılarına aittir.',
             style: TextStyle(fontSize: 11, color: Colors.grey)),
       ),
     ]);

@@ -24,12 +24,12 @@ from .gemini import GeminiError, gemini
 from .sources import enabled_sources
 from .sources.base import FoundProduct
 
-log = logging.getLogger("ucuza.pipeline")
+log = logging.getLogger("fiyatradar.pipeline")
 
 
 # ------------------------------------------------------------------ Puan birleştirme
 async def combined_rating(db: AsyncSession, product: Product) -> None:
-    """avg_rating = dış platform puanları + Ucuza.com yorum puanları (puan sayısına göre ağırlıklı)."""
+    """avg_rating = dış platform puanları + FiyatRadar yorum puanları (puan sayısına göre ağırlıklı)."""
     ext = (await db.scalars(select(ExternalRating).where(ExternalRating.product_id == product.id))).all()
     ext_sum = sum(e.rating * e.rating_count for e in ext)
     ext_n = sum(e.rating_count for e in ext)

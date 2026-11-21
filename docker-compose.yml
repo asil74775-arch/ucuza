@@ -2,12 +2,12 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ucuza
-      POSTGRES_PASSWORD: ucuza
-      POSTGRES_DB: ucuza
+      POSTGRES_USER: fiyatradar
+      POSTGRES_PASSWORD: fiyatradar
+      POSTGRES_DB: fiyatradar
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ucuza"]
+      test: ["CMD-SHELL", "pg_isready -U fiyatradar"]
       interval: 5s
       retries: 10
   redis:

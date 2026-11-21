@@ -8,7 +8,7 @@
     <uses-feature android:name="android.hardware.camera.ar" android:required="false"/>
     <!-- Galeri erişimi Android Photo Picker ile yapılır; geniş depolama izni İSTENMEZ (Play politikası) -->
     <application
-        android:label="Ucuza.com"
+        android:label="FiyatRadar"
         android:usesCleartextTraffic="false"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

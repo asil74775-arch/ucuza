@@ -40,7 +40,7 @@ class _TasteScreenState extends ConsumerState<TasteScreen> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(padding: const EdgeInsets.all(16), children: [
-              const Text('Ucuza.com baktığın, beğendiğin ve sepete eklediğin ürünlerden zevkini öğrenir ve arama sonuçlarını buna göre sıralar. '
+              const Text('FiyatRadar baktığın, beğendiğin ve sepete eklediğin ürünlerden zevkini öğrenir ve arama sonuçlarını buna göre sıralar. '
                   'İstersen ilgi düzeylerini buradan elle ayarlayabilirsin.'),
               const SizedBox(height: 16),
               for (final e in labels.entries) ...[

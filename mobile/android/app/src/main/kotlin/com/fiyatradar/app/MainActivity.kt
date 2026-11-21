@@ -1,4 +1,4 @@
-package com.ucuza.app
+package com.fiyatradar.app
 
 import io.flutter.embedding.android.FlutterActivity
 
