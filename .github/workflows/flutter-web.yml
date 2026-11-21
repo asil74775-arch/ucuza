@@ -35,7 +35,7 @@ jobs:
         run: |
           flutter build web \
             --release \
-            --base-href /fiyatradar/ \
+            --base-href /ucuza/ \
             --dart-define=API_BASE_URL=https://api.fiyatradar.com
 
       - name: Upload Pages artifact
