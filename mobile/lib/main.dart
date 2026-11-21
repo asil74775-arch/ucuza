@@ -9,15 +9,15 @@ import 'core/theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('tr_TR');
-  runApp(const ProviderScope(child: UcuzaApp()));
+  runApp(const ProviderScope(child: BinOlcBirAlApp()));
 }
 
-class UcuzaApp extends ConsumerWidget {
-  const UcuzaApp({super.key});
+class BinOlcBirAlApp extends ConsumerWidget {
+  const BinOlcBirAlApp({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'Ucuza.com',
+      title: 'BinÖlçBirAl',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),

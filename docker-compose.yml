@@ -2,12 +2,12 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ucuza
-      POSTGRES_PASSWORD: ucuza
-      POSTGRES_DB: ucuza
+      POSTGRES_USER: binolcbiral
+      POSTGRES_PASSWORD: binolcbiral
+      POSTGRES_DB: binolcbiral
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ucuza"]
+      test: ["CMD-SHELL", "pg_isready -U binolcbiral"]
       interval: 5s
       retries: 10
   redis:

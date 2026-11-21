@@ -169,7 +169,7 @@ async def duel(db: AsyncSession, a: Product, b: Product) -> dict:
 
     add("Fiyat", a.current_price, b.current_price, False, " TL")
     add("Genel Puan", a.avg_rating, b.avg_rating, True, "/5")
-    add("Ucuza.com Kullanıcı Puanı (AI)", a.ai_rating, b.ai_rating, True, "/5")
+    add("BinÖlçBirAl Kullanıcı Puanı (AI)", a.ai_rating, b.ai_rating, True, "/5")
     add("Fiyat/Performans", a.fp_score, b.fp_score, True)
     add("Dayanıklılık", a.durability_score, b.durability_score, True)
     add("En İyi Seçim Puanı", a.best_choice_score, b.best_choice_score, True)

@@ -5,11 +5,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    app_name: str = "Ucuza.com"
+    app_name: str = "BinÖlçBirAl"
     app_env: str = "development"
     secret_key: str = "dev-secret-change-me-dev-secret-change-me"
     access_token_minutes: int = 60 * 24 * 30
-    database_url: str = "sqlite+aiosqlite:///./ucuza.db"
+    database_url: str = "sqlite+aiosqlite:///./binolcbiral.db"
     redis_url: str | None = None
     media_root: str = "./media"
     public_base_url: str = "http://10.0.2.2:8000"
@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # Yasal metinlerde görünen işletme bilgileri (yayından önce DOLDURUN)
     operator_name: str = "[İşletme adı / şahıs şirketi unvanı]"
     operator_address: str = "[Adres]"
-    contact_email: str = "destek@ucuza.com"
+    contact_email: str = "destek@binolcbiral.com"
     terms_version: str = "2026-11"
 
     gemini_api_key: str | None = None

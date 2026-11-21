@@ -106,7 +106,7 @@ async def test_social_and_messages(client):
 async def test_legal(client):
     for slug in ["gizlilik", "kosullar", "acik-riza", "yontem", "hesap-silme"]:
         r = await client.get(f"/legal/{slug}")
-        assert r.status_code == 200 and "Ucuza.com" in r.text and "{" not in r.text.split("<body>")[1]
+        assert r.status_code == 200 and "BinÖlçBirAl" in r.text and "{" not in r.text.split("<body>")[1]
     bad = await client.post("/auth/register", json={"email": "c@b.co", "password": "sifre1234", "display_name": "Xyz"})
     assert bad.status_code == 400  # koşullar/yaş onayı zorunlu
     n = await client.post("/legal/notices", json={"kind": "marka_itirazi", "name": "Marka A.Ş.", "email": "hukuk@marka.com",

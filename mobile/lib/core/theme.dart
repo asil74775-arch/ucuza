@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const brand = Color(0xFF5B3DF5); // Ucuza moru
+  static const brand = Color(0xFF5B3DF5); // Marka moru
   static const accent = Color(0xFF00C2A8);
   static const buy = Color(0xFF1DB954);
   static const dontBuy = Color(0xFFE5484D);

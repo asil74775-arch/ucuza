@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 
 
 settings = get_settings()
-app = FastAPI(title="Ucuza.com API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="BinÖlçBirAl API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 Path(settings.media_root).mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=settings.media_root), name="media")

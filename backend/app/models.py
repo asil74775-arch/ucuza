@@ -1,4 +1,4 @@
-"""Ucuza.com veritabanı şeması (SQLAlchemy 2.0).
+"""BinÖlçBirAl veritabanı şeması (SQLAlchemy 2.0).
 
 PostgreSQL üretim veritabanıdır; JSON sütunları PostgreSQL'de JSONB'ye,
 testlerde SQLite JSON'una eşlenir.
@@ -139,7 +139,7 @@ class Product(Base):
     # avg_rating: dış platform + uygulama içi puanların sayıya göre ağırlıklı ortalaması
     avg_rating: Mapped[float] = mapped_column(Float, default=0)
     external_rating_count: Mapped[int] = mapped_column(Integer, default=0)
-    # ai_rating: Ucuza.com kullanıcı yorumlarının yapay zeka yıldızı (sahte yorumlar hariç)
+    # ai_rating: BinÖlçBirAl kullanıcı yorumlarının yapay zeka yıldızı (sahte yorumlar hariç)
     ai_rating: Mapped[float] = mapped_column(Float, default=0)
     rating_count: Mapped[int] = mapped_column(Integer, default=0)  # toplam puan sayısı (dış + iç)
     review_count: Mapped[int] = mapped_column(Integer, default=0)  # görünür uygulama içi yorum sayısı
@@ -304,7 +304,7 @@ class VideoJob(Base):
 
 # ---------------------------------------------------------------- Topluluk
 class Experience(Base):
-    """Ucuza.com kullanıcı yorumu = Gerçek Kullanıcı Deneyimi (Keşfet + Bizden Alanlar).
+    """BinÖlçBirAl kullanıcı yorumu = Gerçek Kullanıcı Deneyimi (Keşfet + Bizden Alanlar).
     Uygulamadaki TEK yorum kaynağıdır; yapay zeka analizi bu kayıtlar üzerinde çalışır."""
     __tablename__ = "experiences"
     id: Mapped[int] = mapped_column(primary_key=True)

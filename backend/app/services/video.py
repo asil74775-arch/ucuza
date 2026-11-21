@@ -16,7 +16,7 @@ from ..models import Brand, Experience, Product, User, VideoJob
 from . import assistant, catalog, pipeline
 from .gemini import GeminiError, gemini
 
-log = logging.getLogger("ucuza.video")
+log = logging.getLogger("binolcbiral.video")
 
 DETECT_SCHEMA = {
     "type": "OBJECT",

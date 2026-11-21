@@ -19,7 +19,7 @@ import httpx
 
 from ..config import get_settings
 
-log = logging.getLogger("ucuza.gemini")
+log = logging.getLogger("binolcbiral.gemini")
 BASE = "https://generativelanguage.googleapis.com"
 
 
