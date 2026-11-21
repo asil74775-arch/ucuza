@@ -10,7 +10,7 @@ class AssistantHubScreen extends StatelessWidget {
       (Icons.help_center, 'Satın Almalı Mıyım?', 'Bütçeni ve ihtiyacını söyle: Satın Al / Satın Alma / Bekle', '/ai/should-buy'),
       (Icons.task_alt, 'Alışveriş Görevi', '"1500 TL altı en iyi kablosuz kulaklığı bul" → en iyi 3 seçenek', '/ai/mission'),
       (Icons.construction, 'Proje Asistanı', 'Projen için gereken her şeyi en uygun fiyatla sepete ekler', '/ai/project'),
-      (Icons.sports_mma, 'Karşılaştırma Düellosu', 'İki ürünü kategori kategori kıyasla, kazananı gör', '/ai/duel'),
+      (Icons.compare_arrows, 'Karşılaştır', 'İki ürünü kategori kategori kıyasla, kazananı gör', '/ai/duel'),
       (Icons.camera_alt, 'Fotoğrafla Ürün Ara', 'Ürünü fotoğrafla; yapay zeka tanır, fiyat ve yorum analizi yapar', '/ai/photo-search'),
       (Icons.videocam, 'Video ile Ürün Analizi', 'Videoyu yükle; ürün, yorumlar, sahte yorumlar ve karar', '/ai/video'),
       (Icons.memory, 'Uyumlu Aksesuar Bulucu', 'Cihazına uyan RAM, SSD, kılıf…', '/accessories'),

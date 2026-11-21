@@ -36,7 +36,7 @@ class _DuelScreenState extends ConsumerState<DuelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Karşılaştırma Düellosu')),
+      appBar: AppBar(title: const Text('Karşılaştır')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Row(children: [
           Expanded(child: TextField(controller: a, decoration: const InputDecoration(labelText: '1. ürün'))),
@@ -44,7 +44,7 @@ class _DuelScreenState extends ConsumerState<DuelScreen> {
           Expanded(child: TextField(controller: b, decoration: const InputDecoration(labelText: '2. ürün'))),
         ]),
         const SizedBox(height: 12),
-        FilledButton.icon(onPressed: busy ? null : fight, icon: const Icon(Icons.sports_mma), label: const Text('Düelloyu başlat')),
+        FilledButton.icon(onPressed: busy ? null : fight, icon: const Icon(Icons.compare_arrows), label: const Text('Karşılaştır')),
         if (busy) const Padding(padding: EdgeInsets.all(16), child: LinearProgressIndicator()),
         if (result != null) ..._result(context, result!),
       ]),

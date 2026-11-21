@@ -95,7 +95,7 @@ class _QuickActions extends StatelessWidget {
     final items = [
       (Icons.memory, 'Uyumlu\nAksesuar', '/accessories'),
       (Icons.videocam, 'Video ile\nKeşfet', '/ai/video'),
-      (Icons.sports_mma, 'Karşılaştırma\nDüellosu', '/ai/duel'),
+      (Icons.compare_arrows, 'Ürün\nKarşılaştır', '/ai/duel'),
       (Icons.task_alt, 'Alışveriş\nGörevi', '/ai/mission'),
     ];
     return Padding(

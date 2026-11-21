@@ -246,7 +246,7 @@ class _ActionGrid extends StatelessWidget {
     final actions = <(IconData, String, VoidCallback)>[
       (Icons.help_center, 'Satın Almalı\nMıyım?', () => context.push('/ai/should-buy', extra: p)),
       (Icons.savings, 'Ucuz\nAlternatif', () => context.push('/product/${p['id']}/alternatives')),
-      (Icons.sports_mma, 'Düelloya\nSok', () => context.push('/ai/duel', extra: p)),
+      (Icons.compare_arrows, 'Karşılaştır', () => context.push('/ai/duel', extra: p)),
       if (p['ar_type'] != null) (Icons.view_in_ar, 'AR ile\nGör', () => context.push('/ar', extra: p)),
     ];
     return Padding(
