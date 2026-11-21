@@ -29,7 +29,7 @@ log = logging.getLogger("dengi.pipeline")
 
 # ------------------------------------------------------------------ Puan birleştirme
 async def combined_rating(db: AsyncSession, product: Product) -> None:
-    """avg_rating = dış platform puanları + Dengi yorum puanları (puan sayısına göre ağırlıklı)."""
+    """avg_rating = dış platform puanları + Dengi.com yorum puanları (puan sayısına göre ağırlıklı)."""
     ext = (await db.scalars(select(ExternalRating).where(ExternalRating.product_id == product.id))).all()
     ext_sum = sum(e.rating * e.rating_count for e in ext)
     ext_n = sum(e.rating_count for e in ext)

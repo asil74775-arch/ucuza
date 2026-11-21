@@ -38,7 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: const Icon(Icons.compare_arrows, color: Colors.white),
               ),
               const SizedBox(width: 10),
-              Text('Dengi', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+              Text('Dengi.com', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
             ]),
             const SizedBox(height: 24),
             Text('Dengini bul.', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),

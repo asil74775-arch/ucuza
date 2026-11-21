@@ -1,6 +1,6 @@
 # Hesap ve Veri Silme
 
-Dengi hesabınızı ve verilerinizi iki yoldan silebilirsiniz:
+Dengi.com hesabınızı ve verilerinizi iki yoldan silebilirsiniz:
 
 1. **Uygulama içinden:** Profil > "Hesabımı ve verilerimi sil". İşlem anında gerçekleşir.
 2. **Uygulamaya erişiminiz yoksa:** kayıtlı e-posta adresinizden {contact_email} adresine "Hesabımı silin" konulu bir e-posta gönderin. Talebiniz en geç 30 gün içinde yerine getirilir.

@@ -14,7 +14,7 @@
 - **Yasal metinler:** `backend/legal/` — sunucu tarafından `https://api.dengi.com/legal/...` adreslerinde yayınlanır.
 
 ## [SİZ] Yayından önce
-1. **İsim ve alan adı.** Uygulamanın adı **Dengi** ("dengi dengine": bir ürünün tam karşılığını bulmak), alan adı `dengi.com`.
+1. **İsim ve alan adı.** Uygulamanın adı **Dengi.com** ("dengi dengine": bir ürünün tam karşılığını bulmak), alan adı `dengi.com`.
    - Alan adını **hemen satın alın** (isimtescil.net, natro.com vb.); mümkünse `dengi.com.tr`'yi de alın. Alan adı için "aracıya" veya "sahibiyle görüştürme" adı altında para ödemeyin.
    - **TÜRKPATENT online marka araştırması** (ücretsiz, e-Devlet ile giriş): `dengi` kelimesini 9, 35 ve 42. sınıflarda aratın. Birebir veya çok benzer bir tescil çıkarsa haber verin; isim değiştirilir.
    - İsteğe bağlı: ismi kendi adınıza tescil ettirmek ücretlidir (güncel tarife TÜRKPATENT sitesinde); yayın için zorunlu değildir.

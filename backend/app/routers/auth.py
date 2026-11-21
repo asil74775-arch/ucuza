@@ -40,7 +40,7 @@ async def register(body: RegisterIn, db: AsyncSession = Depends(get_db)):
     if not body.accept_terms:
         raise HTTPException(400, "Devam etmek için Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmelisiniz")
     if not body.age_confirmed:
-        raise HTTPException(400, "Dengi'yi kullanmak için 18 yaşından büyük olmalısınız")
+        raise HTTPException(400, "Dengi.com'u kullanmak için 18 yaşından büyük olmalısınız")
     if await db.scalar(select(User).where(User.email == body.email.lower())):
         raise HTTPException(409, "Bu e-posta zaten kayıtlı")
     now = datetime.now(timezone.utc)

@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    app_name: str = "Dengi"
+    app_name: str = "Dengi.com"
     app_env: str = "development"
     secret_key: str = "dev-secret-change-me-dev-secret-change-me"
     access_token_minutes: int = 60 * 24 * 30

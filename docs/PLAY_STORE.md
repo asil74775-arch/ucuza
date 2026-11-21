@@ -1,4 +1,4 @@
-# Google Play yayın kontrol listesi — Dengi
+# Google Play yayın kontrol listesi — Dengi.com
 
 ## 1. Teknik hazırlık
 - [ ] `applicationId = com.dengi.app` (mobile/android/app/build.gradle.kts) — yayından sonra değiştirilemez.
@@ -12,7 +12,7 @@
 - [ ] Hedef API seviyesi: Flutter'ın güncel `targetSdk`'si (Play'in yıllık zorunluluğunu karşılar).
 
 ## 2. Mağaza girişi (öneri metinleri)
-- **Ad:** Dengi: Akıllı Alışveriş & Fiyat Analizi
+- **Ad:** Dengi.com: Akıllı Alışveriş & Fiyat Analizi
 - **Kısa açıklama (80):** Yapay zeka ile sahte yorumları ayıkla, kronik sorunları gör, en iyi ürünü seç.
 - **Uzun açıklama — ana başlıklar:** Platform puanları tek ekranda · Gerçek kullanıcı yorumları · En İyi Seçim puanı · Sahte Yorum Dedektörü · Kronik Sorunlar & Kroniksiz etiketi · Fiyat ve puan geçmişi · Satın Almalı Mıyım? · Alışveriş Görevi · Proje Asistanı · Karşılaştırma Düellosu · Video ile ürün analizi · AR ile odanda gör / üzerinde dene · Uyumlu aksesuar bulucu · Keşfet & Soru-Cevap · Mesajlaşma
 - **Kategori:** Alışveriş · **Ekran görüntüleri:** telefon için en az 2 (öneri 8): ana sayfa, ürün detay (kronik + rozet), sahte yorum uyarısı, düello, satın almalı mıyım kararı, AR, keşfet, aksesuar bulucu.
@@ -27,7 +27,7 @@
 | Affiliate şeffaflığı | Profil ekranında bilgilendirme; mağaza açıklamasına da ekleyin |
 | İzinler | Yalnızca İnternet, Kamera, Mikrofon (video kaydı). Galeri için Photo Picker → depolama izni yok. AR/kamera `required=false`. |
 | Yapay zeka üretimi içerik | AI yanıtları kullanıcıya "yapay zeka" ikonuyla belirtilir; kullanıcılar içerik şikayet edebilir (Play AI-generated content politikası). |
-| Yorumlar ve puanlar | Yorumlar yalnızca Dengi kullanıcılarına aittir; diğer platformlardan yalnızca puan ortalaması ve sayısı, kaynak adıyla gösterilir. Sahte olasılığı yüksek kullanıcı yorumları gizlenir. |
+| Yorumlar ve puanlar | Yorumlar yalnızca Dengi.com kullanıcılarına aittir; diğer platformlardan yalnızca puan ortalaması ve sayısı, kaynak adıyla gösterilir. Sahte olasılığı yüksek kullanıcı yorumları gizlenir. |
 
 ## 4. Veri güvenliği formu (Data safety) — önerilen yanıtlar
 | Veri türü | Toplanır | Paylaşılır | Amaç | Zorunlu |

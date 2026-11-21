@@ -69,7 +69,7 @@ def md_to_html(md: str) -> str:
 
 
 PAGE = """<!doctype html><html lang="tr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>{title} — Dengi</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>{title} — Dengi.com</title>
 <style>body{{font-family:system-ui,sans-serif;max-width:760px;margin:0 auto;padding:16px;line-height:1.6;color:#1a1a1a}}
 h1{{color:#5B3DF5}}a{{color:#5B3DF5}}nav a{{margin-right:12px}}</style></head><body>
 <nav>{nav}</nav>{body}</body></html>"""
@@ -78,7 +78,7 @@ h1{{color:#5B3DF5}}a{{color:#5B3DF5}}nav a{{margin-right:12px}}</style></head><b
 @router.get("/legal", response_class=HTMLResponse)
 async def legal_index():
     links = "".join(f'<li><a href="/legal/{k}">{v}</a></li>' for k, v in DOCS.items())
-    return PAGE.format(title="Yasal", nav="", body=f"<h1>Dengi yasal metinler</h1><ul>{links}</ul>")
+    return PAGE.format(title="Yasal", nav="", body=f"<h1>Dengi.com yasal metinler</h1><ul>{links}</ul>")
 
 
 @router.get("/legal/{slug}", response_class=HTMLResponse)

@@ -176,7 +176,7 @@ async def seed(demo: bool = True) -> None:
             return
 
         now = datetime.now(timezone.utc)
-        # Demo kullanıcılar (yorumlar yalnızca Dengi kullanıcılarından gelir)
+        # Demo kullanıcılar (yorumlar yalnızca Dengi.com kullanıcılarından gelir)
         pw = hash_password("demo-kullanici-sifre")
         users = []
         for i in range(90):
@@ -193,7 +193,7 @@ async def seed(demo: bool = True) -> None:
                 db.add(brands[brand])
                 await db.flush()
             p = Product(category_id=cats[slug].id, brand_id=brands[brand].id, name=f"{brand} {name}", model_code=model,
-                        description=f"{brand} {name} — teknik özellikler, platform puanları ve Dengi kullanıcı yorumları.",
+                        description=f"{brand} {name} — teknik özellikler, platform puanları ve Dengi.com kullanıcı yorumları.",
                         specs=specs, images=img(f"{brand} {model}"), tags=tags, current_price=price, ar_type=ar,
                         ar_model_url=(f"https://modelviewer.dev/shared-assets/models/"
                                       f"{'Chair' if ar == 'furniture' else 'Astronaut'}.glb") if ar else None,
@@ -210,7 +210,7 @@ async def seed(demo: bool = True) -> None:
                 db.add(ExternalRating(product_id=p.id, source=plat,
                                       rating=round(min(5, max(1, 1 + 4 * quality + rnd.uniform(-.3, .3))), 1),
                                       rating_count=rnd.randint(50, 5000)))
-            # Dengi kullanıcı yorumları (kullanıcı başına tek yorum)
+            # Dengi.com kullanıcı yorumları (kullanıcı başına tek yorum)
             pool = rnd.sample(users, len(users))
             n = rnd.randint(25, 60)
             for i in range(n):

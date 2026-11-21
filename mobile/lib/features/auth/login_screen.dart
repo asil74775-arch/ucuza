@@ -22,7 +22,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> submit() async {
     if (!form.currentState!.validate()) return;
     if (register && !accepted) return toast(context, 'Devam etmek için Kullanım Koşulları ve Gizlilik Politikası\'nı onaylayın');
-    if (register && !adult) return toast(context, 'Dengi\'yi kullanmak için 18 yaşından büyük olmalısınız');
+    if (register && !adult) return toast(context, 'Dengi.com\'u kullanmak için 18 yaşından büyük olmalısınız');
     setState(() => busy = true);
     try {
       final a = ref.read(authProvider.notifier);

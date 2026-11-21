@@ -2,7 +2,7 @@
 
 Son güncelleme: {terms_version}
 
-Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu'nun ("KVKK") 10. maddesi uyarınca, Dengi mobil uygulamasını kullananları bilgilendirmek için hazırlanmıştır.
+Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu'nun ("KVKK") 10. maddesi uyarınca, Dengi.com mobil uygulamasını kullananları bilgilendirmek için hazırlanmıştır.
 
 ## 1. Veri sorumlusu
 {operator_name}, {operator_address}. İletişim: {contact_email}

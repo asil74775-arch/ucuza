@@ -1,11 +1,11 @@
-# Dengi
+# Dengi.com
 
 **Dengini bul.** Yapay zeka destekli alışveriş ve ürün analiz uygulaması.
 
 - **Mobil:** Flutter (Android + iOS), Riverpod, go_router, Dio
 - **Backend:** Python FastAPI, SQLAlchemy 2 (async), PostgreSQL, Redis (WebSocket ölçekleme)
 - **Yapay zeka:** Google Gemini (`gemini-2.5-flash`, ücretsiz katmanı var); anahtar yoksa kural tabanlı yedek motor
-- **Veri:** Yalnızca sözleşmeli affiliate (ortaklık) feed'leri. Dış platformlardan **yalnızca ürün, fiyat ve puan (ortalama + puan sayısı)** alınır; **yorum metni toplanmaz**. Yorumları yalnızca Dengi kullanıcıları yazar.
+- **Veri:** Yalnızca sözleşmeli affiliate (ortaklık) feed'leri. Dış platformlardan **yalnızca ürün, fiyat ve puan (ortalama + puan sayısı)** alınır; **yorum metni toplanmaz**. Yorumları yalnızca Dengi.com kullanıcıları yazar.
 
 > İsim notu: Yayınlamadan önce TÜRKPATENT'te (marka sınıfı 9, 35, 42) isim araştırması yapın ve `dengi.com` alan adının alınabilir olduğunu doğrulayın (bkz. yasal kontrol listesi).
 
@@ -52,7 +52,7 @@ refresher servisi (günlük) ─▶ fiyat + platform puanı → kullanıcı yoru
 
 **Analiz boru hattı** (`services/pipeline.py`):
 1. Kaynaklardan teklif, fiyat ve **puan** güncellemesi (`upsert_found` → `ExternalRating`)
-2. `analyze_reviews` — **yalnızca Dengi kullanıcı yorumları** üzerinde kural tabanlı sahte sinyal + Gemini toplu analiz (AI yıldız, duygu, şikayet anahtarları, sahte olasılığı) → gizleme → kronik sorun tespiti → dış puanlarla ağırlıklı birleşik puan → `RatingHistory`. Her yeni/silinen yorumda otomatik çalışır.
+2. `analyze_reviews` — **yalnızca Dengi.com kullanıcı yorumları** üzerinde kural tabanlı sahte sinyal + Gemini toplu analiz (AI yıldız, duygu, şikayet anahtarları, sahte olasılığı) → gizleme → kronik sorun tespiti → dış puanlarla ağırlıklı birleşik puan → `RatingHistory`. Her yeni/silinen yorumda otomatik çalışır.
 3. `rescore_category` — kategori içi göreli En İyi Seçim / F/P puanı + rozetler
 
 **Yapay zeka güvenliği:** Asistan ürün/fiyat **uyduramaz**; tüm öneriler Gemini fonksiyon çağrılarıyla veritabanından gelir. "Satın Alma" kararını tetikleyen kurallar (bütçe aşımı, ciddi kronik sorun, yüksek risk) modelin "Al" demesiyle ezilemez.

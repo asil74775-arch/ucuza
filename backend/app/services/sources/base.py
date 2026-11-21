@@ -2,7 +2,7 @@
 
 Her adaptör LİSANSLI/RESMİ bir kaynağı temsil eder (affiliate feed, Google
 Shopping). Kaynaklardan YALNIZCA ürün, fiyat ve PUAN (ortalama + sayı) alınır;
-yorum metni toplanmaz. Yorumlar yalnızca Dengi kullanıcılarından gelir.
+yorum metni toplanmaz. Yorumlar yalnızca Dengi.com kullanıcılarından gelir.
 """
 from __future__ import annotations
 
