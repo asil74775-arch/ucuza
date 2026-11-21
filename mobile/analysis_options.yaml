@@ -1,7 +1,11 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  exclude: [build/**, android/**, ios/**]
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
   errors:
     # Flutter 3.47+ material_ui paket ayrımı: material.dart hâlâ çalışır; ekosistem
     # (paketler) geçiş yapınca import'lar topluca güncellenecek.

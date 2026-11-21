@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,7 +33,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
     setState(() { job = null; stage = 'İndiriliyor'; upload = 0; });
     try {
       final r = await ref.read(apiProvider).post<Map<String, dynamic>>(
-        '/ai/video/from-url', data: {'url': trimmed});
+        '/ai/video/from-url', {'url': trimmed});
       _poll(r['job_id']);
     } catch (e) {
       if (mounted) toast(context, e.toString());
@@ -44,7 +45,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
     final f = await ImagePicker().pickVideo(source: src, maxDuration: const Duration(minutes: 3));
     if (f == null) return;
     player?.dispose();
-    player = VideoPlayerController.networkUrl(Uri.file(f.path));
+    player = VideoPlayerController.networkUrl(kIsWeb ? Uri.parse(f.path) : Uri.file(f.path));
     await player!.initialize();
     player!.setLooping(true);
     player!.play();
@@ -55,7 +56,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
     try {
       final r = await ref.read(apiProvider).upload<Map<String, dynamic>>(
             '/ai/video',
-            FormData.fromMap({'file': await MultipartFile.fromFile(f.path, filename: f.name)}),
+            FormData.fromMap({'file': MultipartFile.fromBytes(await f.readAsBytes(), filename: f.name)}),
             onProgress: (p) => setState(() => upload = p),
           );
       _poll(r['job_id']);
@@ -131,6 +132,7 @@ class _VideoTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final res = this.res;
     final ctrl = TextEditingController();
     return ListView(padding: const EdgeInsets.all(16), children: [
         const Text('Bir ürün videosu yükle veya link yapıştır (YouTube, Instagram, TikTok). Yapay zeka ürünü tespit eder, '
@@ -182,8 +184,6 @@ class _VideoTab extends StatelessWidget {
           if (res['product'] == null)
             EmptyView(res['message'] ?? 'Ürün bulunamadı', icon: Icons.search_off)
           else ...[
-            if (res['added_to_catalog'] == true)
-              const Card(child: ListTile(leading: Icon(Icons.add_circle, color: Colors.green), title: Text('Bu ürün sistemde yoktu; internetten bulunup kataloğa eklendi.'))),
             Text('Tespit edilen ürün (güven %${(((res['detected']?['confidence'] ?? 0) as num) * 100).toStringAsFixed(0)})',
                 style: const TextStyle(color: Colors.grey)),
             ProductRow(ProductCard.fromJson(Map<String, dynamic>.from(res['product']))),
@@ -201,7 +201,6 @@ class _VideoTab extends StatelessWidget {
               ProductRow(ProductCard.fromJson(Map<String, dynamic>.from(a)), subtitle: Text('Alternatif · %${a['saving_pct']} daha ucuz')),
           ],
         ],
-      ]),
-    );
+      ]);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +18,7 @@ class PhotoSearchScreen extends ConsumerStatefulWidget {
 }
 
 class _PhotoSearchScreenState extends ConsumerState<PhotoSearchScreen> {
-  String? imagePath;
+  Uint8List? imageBytes;
   bool loading = false;
   double upload = 0;
   Map<String, dynamic>? result;
@@ -25,8 +27,9 @@ class _PhotoSearchScreenState extends ConsumerState<PhotoSearchScreen> {
   Future<void> pick(ImageSource src) async {
     final f = await ImagePicker().pickImage(source: src, imageQuality: 85, maxWidth: 1920);
     if (f == null) return;
+    final bytes = await f.readAsBytes();
     setState(() {
-      imagePath = f.path;
+      imageBytes = bytes;
       result = null;
       error = null;
       loading = true;
@@ -35,7 +38,7 @@ class _PhotoSearchScreenState extends ConsumerState<PhotoSearchScreen> {
     try {
       final r = await ref.read(apiProvider).upload<Map<String, dynamic>>(
             '/ai/photo-search',
-            FormData.fromMap({'file': await MultipartFile.fromFile(f.path, filename: f.name)}),
+            FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: f.name)}),
             onProgress: (p) => setState(() => upload = p),
           );
       if (mounted) setState(() { result = r; loading = false; });
@@ -76,12 +79,12 @@ class _PhotoSearchScreenState extends ConsumerState<PhotoSearchScreen> {
           ),
         ]),
 
-        if (imagePath != null) ...[
+        if (imageBytes != null) ...[
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              Uri.file(imagePath!).toString(),
+            child: Image.memory(
+              imageBytes!,
               height: 220,
               width: double.infinity,
               fit: BoxFit.cover,

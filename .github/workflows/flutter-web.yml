@@ -12,17 +12,18 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
+      # pubspec.lock requires Flutter >=3.47 / Dart >=3.13; verified locally with 3.50.1.
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.0'
+          flutter-version: '3.50.1'
           channel: stable
           cache: true
 
@@ -30,16 +31,25 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
+      - name: Flutter analyze
+        working-directory: mobile
+        run: flutter analyze --no-fatal-infos
+
       - name: Flutter build web
         working-directory: mobile
         run: |
           flutter build web \
             --release \
+            --no-web-resources-cdn \
+            --no-wasm-dry-run \
             --base-href /ucuza/ \
-            --dart-define=API_BASE_URL=https://api.fiyatradar.com
+            --dart-define=API_URL=https://api.fiyatradar.com
+
+      - name: SPA fallback for deep links
+        run: cp mobile/build/web/index.html mobile/build/web/404.html
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: mobile/build/web
 

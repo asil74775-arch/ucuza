@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
@@ -33,7 +32,7 @@ class _TryOnScreenState extends State<TryOnScreen> {
     final cams = await availableCameras();
     final front = cams.firstWhere((c) => c.lensDirection == CameraLensDirection.front, orElse: () => cams.first);
     cam = CameraController(front, ResolutionPreset.medium, enableAudio: false,
-        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888);
+        imageFormatGroup: defaultTargetPlatform == TargetPlatform.android ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888);
     await cam!.initialize();
     if (!mounted) return;
     setState(() {});

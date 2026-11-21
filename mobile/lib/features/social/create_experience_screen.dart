@@ -40,7 +40,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         'product_id': widget.productId,
         'text': text.text.trim(),
         'rating': rating,
-        'files': [for (final f in files) await MultipartFile.fromFile(f.path, filename: f.name)],
+        'files': [for (final f in files) MultipartFile.fromBytes(await f.readAsBytes(), filename: f.name)],
       });
       await ref.read(apiProvider).upload('/experiences', form, onProgress: (p) => setState(() => progress = p));
       if (mounted) {
