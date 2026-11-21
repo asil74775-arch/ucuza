@@ -11,6 +11,7 @@ import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../social/explore_screen.dart' show ExperienceCard;
 import 'charts.dart';
+import '../legal/legal.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
   const ProductScreen({super.key, required this.id});
@@ -83,6 +84,16 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     const Padding(padding: EdgeInsets.all(16), child: Text('Henüz yorum yok. Ürünü kullandıysan ilk yorumu sen yaz!'))
                   else
                     for (final e in exps) ExperienceCard(e, compact: true),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Text(p['disclaimer'] ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.flag_outlined),
+                    title: const Text('Bu sayfada hatalı bilgi mi var?'),
+                    subtitle: const Text('Marka, satıcı veya kullanıcı olarak itiraz edin'),
+                    onTap: () => context.push('/notice', extra: {'type': 'product', 'id': p['id'], 'label': p['name']}),
+                  ),
                   ListTile(
                     leading: const Icon(Icons.forum_outlined),
                     title: const Text('Topluluk Soru-Cevap'),
@@ -188,14 +199,38 @@ class _Header extends StatelessWidget {
           Stars((p['rating'] ?? 0).toDouble(), size: 18, count: p['rating_count']),
           const SizedBox(width: 6),
           const Tooltip(
-            message: 'Platform puanları ve Kıyaslio kullanıcı yorumlarının, puan sayısına göre ağırlıklı ortalaması',
+            message: 'Platform puanları ve Ucuza.com kullanıcı yorumlarının, puan sayısına göre ağırlıklı ortalaması',
             child: Icon(Icons.info_outline, size: 16),
           ),
           const Spacer(),
           ScorePill((p['best_choice_score'] ?? 0).toDouble()),
         ]),
         const SizedBox(height: 10),
-        Wrap(spacing: 6, runSpacing: 6, children: badges.map((b) => BadgeChip(b)).toList()),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: badges
+              .map((b) => GestureDetector(
+                    onTap: () => showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(b),
+                        content: Text((p['badge_basis'] ?? const {})[b] ?? ''),
+                        actions: [
+                          TextButton(onPressed: () => openLegal('yontem'), child: const Text('Yöntem')),
+                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tamam')),
+                        ],
+                      ),
+                    ),
+                    child: BadgeChip(b),
+                  ))
+              .toList(),
+        ),
+        if (badges.isNotEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text('Rozetin dayanağını görmek için üzerine dokunun.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+          ),
         const SizedBox(height: 10),
         Text(p['description'] ?? ''),
       ]),
@@ -291,6 +326,11 @@ class _OffersSection extends StatelessWidget {
     if (offers.isEmpty) return const SizedBox.shrink();
     return Column(children: [
       const SectionTitle('Satıcılar', icon: Icons.storefront),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Text('Ortaklık bağlantısıdır: bu bağlantılardan alışveriş yaparsanız Ucuza.com komisyon alabilir. '
+            'Fiyatlar gecikmeli olabilir; güncel fiyat satıcı sitesindedir.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+      ),
       for (final o in offers)
         ListTile(
           leading: const Icon(Icons.store),
@@ -396,7 +436,7 @@ class _ChronicSection extends StatelessWidget {
     final chronic = List<Map>.from(p['chronic_issues'] ?? const []);
     final frequent = List<Map>.from(p['frequent_complaints'] ?? const []);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const SectionTitle('Kronik Sorunlar', icon: Icons.report_problem),
+      const SectionTitle('Kullanıcıların Bildirdiği Kronik Sorunlar', icon: Icons.report_problem),
       if (chronic.isEmpty)
         Card(
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -416,7 +456,7 @@ class _ChronicSection extends StatelessWidget {
             child: ListTile(
               leading: Icon(Icons.warning_amber, color: c['severity'] == 'high' ? AppColors.dontBuy : AppColors.wait),
               title: Text(c['title'], style: const TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: Text('Yorumların %${((c['share'] as num) * 100).toStringAsFixed(0)}\'inde, '
+              subtitle: Text('Kullanıcı yorumlarının %${((c['share'] as num) * 100).toStringAsFixed(0)}\'inde, '
                   '${c['months_active']} farklı ayda dile getirildi (${c['mention_count']} şikayet)'),
               trailing: Text({'high': 'Yüksek', 'medium': 'Orta', 'low': 'Düşük'}[c['severity']] ?? ''),
             ),
@@ -438,7 +478,7 @@ class _ChronicSection extends StatelessWidget {
   }
 }
 
-/// Dış platformlardan alınan YALNIZCA puan ve puan sayısı + Kıyaslio kullanıcı puanı.
+/// Dış platformlardan alınan YALNIZCA puan ve puan sayısı + Ucuza.com kullanıcı puanı.
 class _PlatformRatings extends StatelessWidget {
   const _PlatformRatings(this.p);
   final Map<String, dynamic> p;
@@ -460,7 +500,7 @@ class _PlatformRatings extends StatelessWidget {
           ListTile(
             dense: true,
             leading: const Icon(Icons.verified_user),
-            title: const Text('Kıyaslio kullanıcıları'),
+            title: const Text('Ucuza.com kullanıcıları'),
             subtitle: const Text('Yapay zeka ile analiz edilmiş, sahte yorumlar hariç'),
             trailing: (p['review_count'] ?? 0) > 0
                 ? Stars((p['ai_rating'] ?? 0).toDouble(), size: 13, count: p['review_count'])
@@ -470,7 +510,7 @@ class _PlatformRatings extends StatelessWidget {
       ),
       const Padding(
         padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
-        child: Text('Diğer platformlardan yalnızca puan ortalaması ve puan sayısı alınır; yorumlar Kıyaslio kullanıcılarına aittir.',
+        child: Text('Diğer platformlardan yalnızca puan ortalaması ve puan sayısı alınır; yorumlar Ucuza.com kullanıcılarına aittir.',
             style: TextStyle(fontSize: 11, color: Colors.grey)),
       ),
     ]);

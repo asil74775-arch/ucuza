@@ -1,4 +1,4 @@
-package com.kiyaslio.kiyaslio
+package com.ucuza.app
 
 import io.flutter.embedding.android.FlutterActivity
 

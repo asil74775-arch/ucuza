@@ -15,16 +15,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import AiMessage, AiSession, CartItem, Category, Product, Project, User
 from . import catalog, matching, pipeline
-from .gemini import GeminiError, gemini
+from .gemini import GeminiError, ai_ok, gemini
 
-log = logging.getLogger("kiyaslio.assistant")
+log = logging.getLogger("ucuza.assistant")
 
 SYSTEM = (
-    "Sen Kıyaslio'nun alışveriş asistanısın. Türkçe, samimi ve net konuş. Ürün, fiyat veya özellik "
+    "Sen Ucuza.com'nun alışveriş asistanısın. Türkçe, samimi ve net konuş. Ürün, fiyat veya özellik "
     "UYDURMA: her zaman araçları kullanarak veritabanındaki gerçek ürünleri ve 'En İyi Seçim' "
     "sıralamasını getir. 'Şu özelliği istiyorsan şunu al' tarzında, kullanıcının ihtiyacına göre "
     "somut öneri ver; her öneride ürün adını, fiyatını ve neden önerdiğini belirt. Kronik sorunları ve "
-    "Yüksek Riskli rozetlerini mutlaka uyar. Fiyatlar TL'dir."
+    "Yüksek Riskli rozetlerini mutlaka uyar; bunları her zaman 'kullanıcıların bildirdiğine göre' diye anlat, "
+    "marka veya ürün hakkında kesin hüküm, hakaret ya da doğrulanmamış iddia kurma. Fiyatlar TL'dir."
 )
 
 TOOLS = [
@@ -140,7 +141,7 @@ async def chat(db: AsyncSession, user: User, session: AiSession, text: str) -> A
     history = [{"role": m.role, "parts": [{"text": m.text}]} for m in past]
     taste = await catalog.taste_of(db, user)
     system = SYSTEM + (f"\nKullanıcının zevk profili (0-1): {json.dumps(taste, ensure_ascii=False)}" if taste else "")
-    if gemini.available:
+    if ai_ok(user):
         try:
             reply, cards = await run_tool_loop(db, user, history, system)
         except GeminiError as e:
@@ -192,7 +193,7 @@ async def should_buy(db: AsyncSession, user: User, product: Product, budget: flo
     sig = await catalog.buy_signals(db, product, budget)
     result = {"verdict": sig["verdict"], "headline": "", "reasons": sig["signals"], "fit_score": None,
               "suggestion": "", "signals": sig}
-    if gemini.available:
+    if ai_ok(user):
         try:
             ai = await gemini.json(
                 f"Ürün: {json.dumps(catalog.card(product), ensure_ascii=False)}\n"
@@ -210,6 +211,8 @@ async def should_buy(db: AsyncSession, user: User, product: Product, budget: flo
     if not result["headline"]:
         result["headline"] = f"{VERDICT_LABEL[result['verdict']]}: {product.name}"
     result["verdict_label"] = VERDICT_LABEL[result["verdict"]]
+    result["disclaimer"] = ("Bu öneri, fiyat geçmişi ve kullanıcı verilerinden otomatik üretilmiştir; "
+                            "kesin bir tavsiye değildir. Son karar size aittir.")
     return result
 
 
@@ -237,7 +240,7 @@ async def mission(db: AsyncSession, user: User, text: str) -> dict:
     cats = (await db.scalars(select(Category))).all()
     plan = {"category_slug": None, "keywords": _keywords(text), "max_price": matching.parse_price_limit(text),
             "spec_filters_json": "{}", "priorities": []}
-    if gemini.available:
+    if ai_ok(user):
         try:
             plan.update(await gemini.json(
                 f"İstek: {text}\nKategoriler ve özellik anahtarları: "
@@ -253,7 +256,7 @@ async def mission(db: AsyncSession, user: User, text: str) -> dict:
         filters = json.loads(plan.get("spec_filters_json") or "{}")
     except json.JSONDecodeError:
         filters = {}
-    if cat and not filters and not gemini.available:
+    if cat and not filters and not ai_ok(user):
         filters = matching.infer_bool_filters(cat, text)
     kw = None if cat else plan.get("keywords")
     res = await catalog.search(db, category_id=cat.id if cat else None, q=kw, max_price=plan.get("max_price"),
@@ -272,7 +275,7 @@ async def mission(db: AsyncSession, user: User, text: str) -> dict:
         used.add(key)
         r["strength"] = STRENGTH_LABELS[key]
     summary = ""
-    if gemini.available and top:
+    if ai_ok(user) and top:
         try:
             summary = await gemini.text(
                 f"Kullanıcının isteği: {text}\nKarşılaştırılan en iyi 3 ürün: {json.dumps(top, ensure_ascii=False)}\n"
@@ -301,7 +304,7 @@ PROJECT_SCHEMA = {
 async def project_plan(db: AsyncSession, user: User, title: str, description: str, budget: float | None,
                        add_to_cart: bool = True) -> dict:
     cats = (await db.scalars(select(Category))).all()
-    if gemini.available:
+    if ai_ok(user):
         try:
             plan = await gemini.json(
                 f"Proje: {title}\nAçıklama: {description}\nBütçe: {budget or 'belirtilmedi'} TL\n"

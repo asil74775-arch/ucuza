@@ -173,3 +173,25 @@ def assign_badges(items: list[ScoreInput], results: list[ScoreResult]) -> None:
             r.badges.append(BADGE_HIGH_RISK)
         if n >= 3 and pop_pct >= 0.7 and price_pct >= 0.7 and fp_pct <= 0.4:
             r.badges.append(BADGE_OVERPRICED)
+
+
+# Her rozetin NESNEL dayanağı — ürün sayfasında rozete dokununca gösterilir.
+# Dil bilinçli olarak "kullanıcı bildirimlerine göre" şeklindedir: bir kanaat/iddia değil,
+# ölçülebilir verinin özetidir (marka itirazlarına karşı en önemli koruma).
+BADGE_BASIS = {
+    BADGE_BEST_PRICE: "Kategorideki, puanı 3,5 ve üzeri olan ürünler arasında şu anki en düşük fiyat.",
+    BADGE_RELIABLE: "Puanı 4,2 ve üzeri, kullanıcıların bildirdiği yüksek önemde kronik sorunu yok ve "
+                    "şüpheli yorum oranı düşük.",
+    BADGE_STUDENT: "Kategorideki ürünlerin ucuz yarısında ve fiyat/performans puanı üst sıralarda.",
+    BADGE_HIGH_RISK: "Kullanıcı bildirimlerine göre: yüksek oranda tekrarlayan bir sorun bildirilmiş, şüpheli yorum "
+                     "oranı yüksek veya kullanıcı puanı düşük. Bu bir kalite tespiti değil, kullanıcı verisinin özetidir.",
+    BADGE_OVERPRICED: "Kategoride en çok puanlanan ve en pahalı ürünler arasında, ancak fiyat/performans puanı "
+                      "kategorinin alt yarısında.",
+    BADGE_CHRONIC_FREE: "Yeterli sayıda kullanıcı yorumunda, birden çok aya yayılan tekrarlayan bir sorun bildirilmemiş.",
+    BADGE_BEST_CHOICE: "Kategorideki En İyi Seçim puanı en yüksek ürün.",
+}
+
+DISCLAIMER = ("Puanlar, rozetler ve yapay zeka değerlendirmeleri; diğer platformlardaki puanlar ve Ucuza.com "
+              "kullanıcılarının yorumlarından otomatik olarak hesaplanır. Bilgilendirme amaçlıdır, hata içerebilir; "
+              "ürün veya marka hakkında bir iddia ya da satın alma tavsiyesi değildir. Hatalı olduğunu düşündüğünüz "
+              "bilgiler için itiraz edebilirsiniz.")

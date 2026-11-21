@@ -19,7 +19,7 @@ import httpx
 
 from ..config import get_settings
 
-log = logging.getLogger("kiyaslio.gemini")
+log = logging.getLogger("ucuza.gemini")
 BASE = "https://generativelanguage.googleapis.com"
 
 
@@ -139,3 +139,10 @@ class GeminiClient:
 
 
 gemini = GeminiClient()
+
+
+def ai_ok(user) -> bool:
+    """Kullanıcının yazdığı/yüklediği içerik Gemini'ye (yurt dışı) YALNIZCA açık rızasıyla gönderilir.
+    Rıza yoksa çağıran servis kural tabanlı yerel moda düşer. Kişisel veri içermeyen istekler
+    (ör. iki ürünün teknik verisinin karşılaştırma yorumu) bu kontrole tabi değildir."""
+    return gemini.available and bool(getattr(user, "ai_consent", False))

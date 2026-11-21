@@ -1,4 +1,4 @@
-"""Kıyaslio veritabanı şeması (SQLAlchemy 2.0).
+"""Ucuza.com veritabanı şeması (SQLAlchemy 2.0).
 
 PostgreSQL üretim veritabanıdır; JSON sütunları PostgreSQL'de JSONB'ye,
 testlerde SQLite JSON'una eşlenir.
@@ -30,6 +30,14 @@ class User(Base):
     avatar_url: Mapped[str | None] = mapped_column(String(500))
     fcm_token: Mapped[str | None] = mapped_column(String(500))
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Yasal onaylar (kayıtta alınır, sürümüyle saklanır)
+    terms_version: Mapped[str] = mapped_column(String(20), default="")
+    terms_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    age_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)  # 18 yaş ve üzeri
+    # KVKK açık rıza: içeriğin yurt dışındaki yapay zeka hizmetine (Google Gemini) aktarılması.
+    # İSTEĞE BAĞLIDIR; verilmezse uygulama çalışır, AI özellikleri kural tabanlı moda düşer.
+    ai_consent: Mapped[bool] = mapped_column(Boolean, default=False)
+    ai_consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     taste: Mapped["TasteProfile"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
@@ -71,6 +79,21 @@ class Report(Base):
     target_id: Mapped[int] = mapped_column(Integer)
     reason: Mapped[str] = mapped_column(String(300))
     status: Mapped[str] = mapped_column(String(20), default="open")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class LegalNotice(Base):
+    """Hak ihlali / içerik kaldırma / marka itirazı / KVKK başvurusu (giriş gerekmeden yapılabilir)."""
+    __tablename__ = "legal_notices"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(30))  # icerik_kaldirma|marka_itirazi|kvkk_basvurusu|diger
+    name: Mapped[str] = mapped_column(String(200))
+    email: Mapped[str] = mapped_column(String(255))
+    target_type: Mapped[str | None] = mapped_column(String(20))  # product|experience|question|answer|user
+    target_id: Mapped[int | None] = mapped_column(Integer)
+    description: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="open")  # open|accepted|rejected
+    resolution: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -116,7 +139,7 @@ class Product(Base):
     # avg_rating: dış platform + uygulama içi puanların sayıya göre ağırlıklı ortalaması
     avg_rating: Mapped[float] = mapped_column(Float, default=0)
     external_rating_count: Mapped[int] = mapped_column(Integer, default=0)
-    # ai_rating: Kıyaslio kullanıcı yorumlarının yapay zeka yıldızı (sahte yorumlar hariç)
+    # ai_rating: Ucuza.com kullanıcı yorumlarının yapay zeka yıldızı (sahte yorumlar hariç)
     ai_rating: Mapped[float] = mapped_column(Float, default=0)
     rating_count: Mapped[int] = mapped_column(Integer, default=0)  # toplam puan sayısı (dış + iç)
     review_count: Mapped[int] = mapped_column(Integer, default=0)  # görünür uygulama içi yorum sayısı
@@ -281,7 +304,7 @@ class VideoJob(Base):
 
 # ---------------------------------------------------------------- Topluluk
 class Experience(Base):
-    """Kıyaslio kullanıcı yorumu = Gerçek Kullanıcı Deneyimi (Keşfet + Bizden Alanlar).
+    """Ucuza.com kullanıcı yorumu = Gerçek Kullanıcı Deneyimi (Keşfet + Bizden Alanlar).
     Uygulamadaki TEK yorum kaynağıdır; yapay zeka analizi bu kayıtlar üzerinde çalışır."""
     __tablename__ = "experiences"
     id: Mapped[int] = mapped_column(primary_key=True)

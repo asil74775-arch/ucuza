@@ -73,3 +73,17 @@ async def fcm(body: FcmIn, user: User = Depends(current_user), db: AsyncSession 
     user.fcm_token = body.token
     await db.commit()
     return {"ok": True}
+
+
+class ConsentIn(BaseModel):
+    ai_consent: bool
+
+
+@router.put("/consent")
+async def consent(body: ConsentIn, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    """KVKK açık rıza ver / geri al. Geri alındığında yeni içerik yurt dışına gönderilmez."""
+    from datetime import datetime, timezone
+    user.ai_consent = body.ai_consent
+    user.ai_consent_at = datetime.now(timezone.utc) if body.ai_consent else None
+    await db.commit()
+    return {"ai_consent": user.ai_consent}

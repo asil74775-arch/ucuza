@@ -42,11 +42,24 @@ class AuthController extends StateNotifier<AuthState> {
     _set(AuthState(user: r['user'], ready: true));
   }
 
-  Future<void> register(String email, String password, String name, List<String> interests) async {
-    final r = await api.post<Map<String, dynamic>>('/auth/register',
-        {'email': email, 'password': password, 'display_name': name, 'interests': interests});
+  Future<void> register(String email, String password, String name, List<String> interests,
+      {required bool acceptTerms, required bool ageConfirmed, bool aiConsent = false}) async {
+    final r = await api.post<Map<String, dynamic>>('/auth/register', {
+      'email': email,
+      'password': password,
+      'display_name': name,
+      'interests': interests,
+      'accept_terms': acceptTerms,
+      'age_confirmed': ageConfirmed,
+      'ai_consent': aiConsent,
+    });
     await api.saveToken(r['token']);
     _set(AuthState(user: r['user'], ready: true));
+  }
+
+  Future<void> setAiConsent(bool v) async {
+    await api.put('/profile/consent', {'ai_consent': v});
+    _set(AuthState(user: {...?state.user, 'ai_consent': v}, ready: true));
   }
 
   Future<void> logout() async {

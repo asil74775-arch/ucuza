@@ -1,7 +1,8 @@
 from .affiliate_feed import AffiliateFeed
-from .serpapi import SerpApiShopping
 
-REGISTRY = [AffiliateFeed(), SerpApiShopping()]
+# Yalnızca sözleşmeli affiliate/ortaklık feed'leri kullanılır (site kazıma veya
+# kazıma tabanlı arama API'leri bilinçli olarak YOK — hukuki risk).
+REGISTRY = [AffiliateFeed()]
 
 
 def enabled_sources():

@@ -7,6 +7,7 @@ geçmişini/alternatifleri kontrol et -> karar.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from sqlalchemy import func, or_, select
 
@@ -15,7 +16,7 @@ from ..models import Brand, Experience, Product, User, VideoJob
 from . import assistant, catalog, pipeline
 from .gemini import GeminiError, gemini
 
-log = logging.getLogger("kiyaslio.video")
+log = logging.getLogger("ucuza.video")
 
 DETECT_SCHEMA = {
     "type": "OBJECT",
@@ -56,7 +57,7 @@ async def process(job_id: int) -> None:
             job.status, job.stage = "processing", "Videodaki ürün tespit ediliyor"
             await db.commit()
             if not gemini.available:
-                raise GeminiError("Video analizi için GEMINI_API_KEY gerekli")
+                raise GeminiError("Video analizi şu anda kullanılamıyor")
             det = await gemini.json(
                 "Bu videodaki ana ürünü tespit et (marka, tam model). Ekranda/ambalajda yazan model kodlarını "
                 "oku. Videonun sponsorlu içerik olup olmadığını ve ürün hakkında yapılan iddiaları çıkar.",
@@ -101,3 +102,6 @@ async def process(job_id: int) -> None:
             log.exception("video job %s başarısız", job_id)
             job.status, job.error = "failed", str(e)[:500]
             await db.commit()
+        finally:
+            # Veri minimizasyonu: video analiz biter bitmez sunucudan silinir.
+            Path(job.file_path).unlink(missing_ok=True)

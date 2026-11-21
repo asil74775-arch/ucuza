@@ -12,3 +12,5 @@ mobile/android/app/*.jks
 mobile/android/app/google-services.json
 mobile/*.iml
 mobile/.flutter-plugins*
+mobile/.idea/
+mobile/android/*.iml

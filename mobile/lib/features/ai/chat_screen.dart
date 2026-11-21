@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api.dart';
 import '../../core/models.dart';
 import '../../core/widgets.dart';
+import '../legal/legal.dart';
 
 /// Genel yapay zeka sohbeti: katalog + En İyi Seçim sıralaması üzerinden öneri yapar.
 class ChatScreen extends ConsumerStatefulWidget {
@@ -55,6 +56,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   const Icon(Icons.auto_awesome, size: 48),
                   const SizedBox(height: 12),
                   const Text('Ne aradığını anlat; En İyi Seçim sıralamasına göre sana en uygun ürünü söyleyeyim.', textAlign: TextAlign.center),
+                  const SizedBox(height: 8),
+                  const Text(aiDisclaimer, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.grey)),
                   const SizedBox(height: 16),
                   for (final s in suggestions) Card(child: ListTile(title: Text(s), onTap: () => send(s))),
                 ])

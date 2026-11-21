@@ -12,7 +12,8 @@ async def client():
     await seed(demo=True)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
         r = await c.post("/auth/register", json={"email": "a@b.co", "password": "sifre1234",
-                                                 "display_name": "Ayşe", "interests": ["gaming", "budget"]})
+                                                 "display_name": "Ayşe", "interests": ["gaming", "budget"],
+                                                 "accept_terms": True, "age_confirmed": True})
         c.headers["Authorization"] = f"Bearer {r.json()['token']}"
         yield c
 
@@ -94,8 +95,27 @@ async def test_social_and_messages(client):
     a = (await client.post(f"/questions/{q['id']}/answers", json={"text": "Yaklaşık 1 saat"})).json()
     assert a["is_owner"]  # deneyim paylaşan kullanıcı sahip sayılır
     other = await AsyncClient(transport=ASGITransport(app=app), base_url="http://t").post(
-        "/auth/register", json={"email": "b@b.co", "password": "sifre1234", "display_name": "Mehmet"})
+        "/auth/register", json={"email": "b@b.co", "password": "sifre1234", "display_name": "Mehmet",
+                                     "accept_terms": True, "age_confirmed": True})
     conv = (await client.post("/conversations", json={"user_id": other.json()["user"]["id"], "text": "Merhaba!"})).json()
     msgs = (await client.get(f"/conversations/{conv['id']}/messages")).json()
     assert msgs[0]["text"] == "Merhaba!"
     assert (await client.post("/profile/events", json={"kind": "purchase", "product_id": pid})).json()["ok"]
+
+
+async def test_legal(client):
+    for slug in ["gizlilik", "kosullar", "acik-riza", "yontem", "hesap-silme"]:
+        r = await client.get(f"/legal/{slug}")
+        assert r.status_code == 200 and "Ucuza.com" in r.text and "{" not in r.text.split("<body>")[1]
+    bad = await client.post("/auth/register", json={"email": "c@b.co", "password": "sifre1234", "display_name": "Xyz"})
+    assert bad.status_code == 400  # koşullar/yaş onayı zorunlu
+    n = await client.post("/legal/notices", json={"kind": "marka_itirazi", "name": "Marka A.Ş.", "email": "hukuk@marka.com",
+                                                  "target_type": "product", "target_id": 1,
+                                                  "description": "Kronik sorun bilgisinin hatalı olduğunu düşünüyoruz."})
+    assert n.status_code == 200
+    v = await client.post("/ai/video", files={"file": ("a.mp4", b"x", "video/mp4")})
+    assert v.status_code == 403  # açık rıza olmadan video yüklenemez
+    assert (await client.put("/profile/consent", json={"ai_consent": True})).json()["ai_consent"]
+    pid = (await client.get("/products", params={"q": "X-Phone"})).json()[0]["id"]
+    d = (await client.get(f"/products/{pid}")).json()
+    assert d["disclaimer"] and d["badge_basis"].get("Yüksek Riskli")

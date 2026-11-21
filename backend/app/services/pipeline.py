@@ -1,7 +1,7 @@
 """Ürün analiz boru hattı.
 
 refresh_product:  kaynaklardan teklif + PUAN çek -> analyze_reviews -> rescore_category
-analyze_reviews:  KIYASLIO KULLANICI YORUMLARI üzerinde kural + Gemini ile AI yıldız, duygu,
+analyze_reviews:  UCUZA KULLANICI YORUMLARI üzerinde kural + Gemini ile AI yıldız, duygu,
                   şikayet, sahte olasılığı; kronik tespit; dış puanlarla birleşik ortalama
 Dış kaynaklardan yorum metni TOPLANMAZ; yalnızca puan ortalaması ve puan sayısı alınır.
 rescore_category: En İyi Seçim / F/P puanı + güven rozetleri
@@ -24,12 +24,12 @@ from .gemini import GeminiError, gemini
 from .sources import enabled_sources
 from .sources.base import FoundProduct
 
-log = logging.getLogger("kiyaslio.pipeline")
+log = logging.getLogger("ucuza.pipeline")
 
 
 # ------------------------------------------------------------------ Puan birleştirme
 async def combined_rating(db: AsyncSession, product: Product) -> None:
-    """avg_rating = dış platform puanları + Kıyaslio yorum puanları (puan sayısına göre ağırlıklı)."""
+    """avg_rating = dış platform puanları + Ucuza.com yorum puanları (puan sayısına göre ağırlıklı)."""
     ext = (await db.scalars(select(ExternalRating).where(ExternalRating.product_id == product.id))).all()
     ext_sum = sum(e.rating * e.rating_count for e in ext)
     ext_n = sum(e.rating_count for e in ext)
@@ -49,7 +49,8 @@ async def analyze_reviews(db: AsyncSession, product_id: int) -> dict:
     heur = {v.id: v for v in fake_reviews.heuristic_scores(lite)} if lite else {}
 
     ai: dict[int, dict] = {}
-    pending = [r for r in reviews if not r.analyzed]
+    # KVKK: yalnızca yazarı açık rıza vermiş yorumlar Gemini'ye gönderilir (kimlik bilgisi gönderilmez).
+    pending = [r for r in reviews if not r.analyzed and r.user and r.user.ai_consent]
     if gemini.available and pending:
         for i in range(0, len(pending), 25):
             chunk = pending[i:i + 25]

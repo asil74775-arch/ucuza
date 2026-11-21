@@ -1,18 +1,18 @@
-# Google Play yayın kontrol listesi — Kıyaslio
+# Google Play yayın kontrol listesi — Ucuza.com
 
 ## 1. Teknik hazırlık
-- [ ] `applicationId = com.kiyaslio.app` (mobile/android/app/build.gradle.kts) — yayından sonra değiştirilemez.
+- [ ] `applicationId = com.ucuza.app` (mobile/android/app/build.gradle.kts) — yayından sonra değiştirilemez.
 - [ ] Yükleme anahtarı oluştur:
   `keytool -genkey -v -keystore mobile/android/app/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`
   ve `mobile/android/key.properties.example` → `key.properties` (git'e eklenmez). Play App Signing'i etkinleştir.
 - [ ] Uygulama ikonu (512×512) ve adaptive icon: `flutter_launcher_icons` ile `mipmap` setini üret.
 - [ ] `pubspec.yaml` → `version: 1.0.0+1`; her yüklemede `+N` artmalı.
 - [ ] Backend HTTPS üzerinde (`usesCleartextTraffic=false` yalnızca release'te; debug manifest yerel http'ye izin verir).
-- [ ] `flutter build appbundle --release --dart-define=API_URL=https://api.kiyaslio.com`
+- [ ] `flutter build appbundle --release --dart-define=API_URL=https://api.ucuza.com`
 - [ ] Hedef API seviyesi: Flutter'ın güncel `targetSdk`'si (Play'in yıllık zorunluluğunu karşılar).
 
 ## 2. Mağaza girişi (öneri metinleri)
-- **Ad:** Kıyaslio: Akıllı Alışveriş & Fiyat Analizi
+- **Ad:** Ucuza.com: Akıllı Alışveriş & Fiyat Analizi
 - **Kısa açıklama (80):** Yapay zeka ile sahte yorumları ayıkla, kronik sorunları gör, en iyi ürünü seç.
 - **Uzun açıklama — ana başlıklar:** Platform puanları tek ekranda · Gerçek kullanıcı yorumları · En İyi Seçim puanı · Sahte Yorum Dedektörü · Kronik Sorunlar & Kroniksiz etiketi · Fiyat ve puan geçmişi · Satın Almalı Mıyım? · Alışveriş Görevi · Proje Asistanı · Karşılaştırma Düellosu · Video ile ürün analizi · AR ile odanda gör / üzerinde dene · Uyumlu aksesuar bulucu · Keşfet & Soru-Cevap · Mesajlaşma
 - **Kategori:** Alışveriş · **Ekran görüntüleri:** telefon için en az 2 (öneri 8): ana sayfa, ürün detay (kronik + rozet), sahte yorum uyarısı, düello, satın almalı mıyım kararı, AR, keşfet, aksesuar bulucu.
@@ -20,14 +20,14 @@
 ## 3. Politika uyumu (kodda karşılığı olanlar)
 | Gereksinim | Uygulamadaki karşılık |
 |---|---|
-| Hesap silme (uygulama içi + web) | Profil → "Hesabımı ve verilerimi sil" → `DELETE /auth/me`. Ayrıca web formu bağlantısını Play Console'a girin. |
+| Hesap silme (uygulama içi + web) | Profil → "Hesabımı ve verilerimi sil" → `DELETE /auth/me`. Web adresi: `https://api.ucuza.com/legal/hesap-silme` |
 | Kullanıcı içeriği (UGC) moderasyonu | Her paylaşım/soru/cevap/mesajda "Şikayet et" ve "Engelle"; 3 şikayette otomatik gizleme; bağlantı/iletişim bilgisi filtresi; kayıtta koşulların kabulü |
-| Gizlilik politikası | `docs/GIZLILIK_POLITIKASI.md` → kiyaslio.com/gizlilik adresinde yayınlayın |
+| Gizlilik politikası | Sunucu tarafından `https://api.ucuza.com/legal/gizlilik` adresinde yayınlanır (`backend/legal/`) |
 | Ödemeler | Fiziksel ürünler satıcının sitesinde alınır (affiliate). Google Play Billing gerekmez. |
 | Affiliate şeffaflığı | Profil ekranında bilgilendirme; mağaza açıklamasına da ekleyin |
 | İzinler | Yalnızca İnternet, Kamera, Mikrofon (video kaydı). Galeri için Photo Picker → depolama izni yok. AR/kamera `required=false`. |
 | Yapay zeka üretimi içerik | AI yanıtları kullanıcıya "yapay zeka" ikonuyla belirtilir; kullanıcılar içerik şikayet edebilir (Play AI-generated content politikası). |
-| Yorumlar ve puanlar | Yorumlar yalnızca Kıyaslio kullanıcılarına aittir; diğer platformlardan yalnızca puan ortalaması ve sayısı, kaynak adıyla gösterilir. Sahte olasılığı yüksek kullanıcı yorumları gizlenir. |
+| Yorumlar ve puanlar | Yorumlar yalnızca Ucuza.com kullanıcılarına aittir; diğer platformlardan yalnızca puan ortalaması ve sayısı, kaynak adıyla gösterilir. Sahte olasılığı yüksek kullanıcı yorumları gizlenir. |
 
 ## 4. Veri güvenliği formu (Data safety) — önerilen yanıtlar
 | Veri türü | Toplanır | Paylaşılır | Amaç | Zorunlu |

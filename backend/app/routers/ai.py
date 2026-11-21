@@ -51,7 +51,8 @@ def msg_out(m: AiMessage) -> dict:
 
 @router.get("/status")
 async def status():
-    return {"ai_enabled": gemini.available, "model": gemini.model}
+    return {"ai_enabled": gemini.available, "model": gemini.model,
+            "disclaimer": "Yapay zeka yanıtları bilgilendirme amaçlıdır, hata içerebilir ve satın alma tavsiyesi değildir."}
 
 
 @router.post("/sessions")
@@ -124,6 +125,8 @@ async def duel(body: DuelIn, user: User = Depends(current_user), db: AsyncSessio
 @router.post("/video")
 async def upload_video(bg: BackgroundTasks, file: UploadFile = File(...), user: User = Depends(current_user),
                        db: AsyncSession = Depends(get_db)):
+    if not user.ai_consent:
+        raise HTTPException(403, "Video analizi için Profil > Gizlilik bölümünden yapay zeka açık rızası vermelisiniz.")
     path, _, kind = await storage.save_upload(file, "videos")
     if kind != "video":
         raise HTTPException(415, "Lütfen bir video yükleyin")

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/session.dart';
 import '../../core/widgets.dart';
+import '../legal/legal.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.interests = const []});
@@ -17,16 +17,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final email = TextEditingController();
   final pass = TextEditingController();
   final name = TextEditingController();
-  bool register = true, busy = false, accepted = false;
+  bool register = true, busy = false, accepted = false, adult = false, aiConsent = false;
 
   Future<void> submit() async {
     if (!form.currentState!.validate()) return;
-    if (register && !accepted) return toast(context, 'Devam etmek için gizlilik politikasını onaylayın');
+    if (register && !accepted) return toast(context, 'Devam etmek için Kullanım Koşulları ve Gizlilik Politikası\'nı onaylayın');
+    if (register && !adult) return toast(context, 'Ucuza.com\'u kullanmak için 18 yaşından büyük olmalısınız');
     setState(() => busy = true);
     try {
       final a = ref.read(authProvider.notifier);
       register
-          ? await a.register(email.text.trim(), pass.text, name.text.trim(), widget.interests)
+          ? await a.register(email.text.trim(), pass.text, name.text.trim(), widget.interests,
+              acceptTerms: accepted, ageConfirmed: adult, aiConsent: aiConsent)
           : await a.login(email.text.trim(), pass.text);
     } catch (e) {
       if (mounted) toast(context, e.toString());
@@ -63,21 +65,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: const InputDecoration(labelText: 'Şifre', prefixIcon: Icon(Icons.lock)),
             validator: (v) => (v ?? '').length < 8 ? 'En az 8 karakter' : null,
           ),
-          if (register)
+          if (register) ...[
             CheckboxListTile(
               value: accepted,
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               onChanged: (v) => setState(() => accepted = v ?? false),
-              title: Wrap(children: [
-                const Text('Kullanım koşullarını ve '),
-                GestureDetector(
-                  onTap: () => launchUrl(Uri.parse('https://kiyaslio.com/gizlilik')),
-                  child: Text('Gizlilik Politikası', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-                ),
-                const Text("'nı kabul ediyorum."),
+              title: const Wrap(children: [
+                LegalLink('kosullar'),
+                Text("'nı ve "),
+                LegalLink('gizlilik', label: 'Gizlilik Politikası / Aydınlatma Metni'),
+                Text("'ni okudum, kabul ediyorum. (Zorunlu)"),
               ]),
             ),
+            CheckboxListTile(
+              value: adult,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              onChanged: (v) => setState(() => adult = v ?? false),
+              title: const Text('18 yaşından büyüğüm. (Zorunlu)'),
+            ),
+            CheckboxListTile(
+              value: aiConsent,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              onChanged: (v) => setState(() => aiConsent = v ?? false),
+              title: const Wrap(children: [
+                Text('Yorumlarımın, asistan mesajlarımın ve yüklediğim videoların yapay zeka analizi için yurt dışına '
+                    'aktarılmasına '),
+                LegalLink('acik-riza', label: 'açık rıza'),
+                Text(' veriyorum. (İsteğe bağlı — sonra Profil\'den değiştirebilirsiniz)'),
+              ]),
+            ),
+          ],
           const SizedBox(height: 16),
           FilledButton(
             onPressed: busy ? null : submit,

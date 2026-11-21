@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api.dart';
 import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../core/widgets.dart';
+import '../legal/legal.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -41,12 +41,31 @@ class ProfileScreen extends ConsumerWidget {
         ),
         ListTile(leading: const Icon(Icons.construction), title: const Text('Projelerim'), onTap: () => context.go('/cart')),
         const Divider(),
-        ListTile(leading: const Icon(Icons.privacy_tip_outlined), title: const Text('Gizlilik Politikası'), onTap: () => launchUrl(Uri.parse('https://kiyaslio.com/gizlilik'))),
-        ListTile(leading: const Icon(Icons.description_outlined), title: const Text('Kullanım Koşulları'), onTap: () => launchUrl(Uri.parse('https://kiyaslio.com/kosullar'))),
+        const SectionTitle('Gizlilik', icon: Icons.privacy_tip_outlined),
+        SwitchListTile(
+          secondary: const Icon(Icons.auto_awesome),
+          title: const Text('Yapay zeka analizi (açık rıza)'),
+          subtitle: const Text('Kapalıyken içerikleriniz yurt dışına gönderilmez; asistan basit modda çalışır, video analizi kapalıdır.'),
+          value: user?['ai_consent'] == true,
+          onChanged: (v) async {
+            try {
+              await ref.read(authProvider.notifier).setAiConsent(v);
+            } catch (e) {
+              if (context.mounted) toast(context, e.toString());
+            }
+          },
+        ),
+        for (final e in legalDocs.entries)
+          ListTile(leading: const Icon(Icons.description_outlined), title: Text(e.value), onTap: () => openLegal(e.key)),
+        ListTile(
+          leading: const Icon(Icons.gavel),
+          title: const Text('Hak ihlali / itiraz / KVKK başvurusu'),
+          onTap: () => context.push('/notice'),
+        ),
         const ListTile(
           leading: Icon(Icons.info_outline),
           title: Text('Affiliate bilgilendirmesi'),
-          subtitle: Text('Kıyaslio, satıcı bağlantıları üzerinden yapılan alışverişlerden komisyon alabilir. Bu, sıralamaları etkilemez.'),
+          subtitle: Text('Ucuza.com, satıcı bağlantıları üzerinden yapılan alışverişlerden komisyon alabilir. Bu, sıralamaları etkilemez.'),
         ),
         ListTile(leading: const Icon(Icons.logout), title: const Text('Çıkış yap'), onTap: () => ref.read(authProvider.notifier).logout()),
         ListTile(
@@ -74,7 +93,7 @@ class ProfileScreen extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 24),
-        const Center(child: Text('Kıyaslio v1.0.0', style: TextStyle(color: Colors.grey))),
+        const Center(child: Text('Ucuza.com v1.0.0', style: TextStyle(color: Colors.grey))),
         const SizedBox(height: 24),
       ]),
     );

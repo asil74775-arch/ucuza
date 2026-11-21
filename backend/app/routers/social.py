@@ -1,4 +1,4 @@
-"""Kıyaslio kullanıcı yorumları (Keşfet + Bizden Alanlar), Topluluk Soru-Cevap, şikayet/engelleme.
+"""Ucuza.com kullanıcı yorumları (Keşfet + Bizden Alanlar), Topluluk Soru-Cevap, şikayet/engelleme.
 Uygulamadaki tek yorum kaynağı budur; dış platformlardan yorum metni alınmaz."""
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field

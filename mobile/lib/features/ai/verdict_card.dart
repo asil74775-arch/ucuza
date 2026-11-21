@@ -37,6 +37,9 @@ class VerdictCard extends StatelessWidget {
             const Divider(),
             Text('Öneri: ${r['suggestion']}'),
           ],
+          const SizedBox(height: 8),
+          Text(r['disclaimer'] ?? 'Bu öneri otomatik üretilmiştir; kesin bir tavsiye değildir.',
+              style: const TextStyle(fontSize: 11, color: Colors.grey)),
         ]),
       ),
     );

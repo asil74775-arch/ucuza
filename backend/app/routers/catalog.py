@@ -9,7 +9,7 @@ from ..db import SessionLocal, get_db
 from ..models import (
     Brand, Category, Compatibility, Experience, ExternalRating, Offer, PriceHistory, Product, RatingHistory, User,
 )
-from ..services import catalog, matching, pipeline
+from ..services import catalog, matching, pipeline, scoring
 
 router = APIRouter(tags=["catalog"])
 
@@ -102,7 +102,9 @@ async def product_detail(pid: int, db: AsyncSession = Depends(get_db)):
     return {
         **catalog.card(p), "description": p.description, "model_code": p.model_code, "images": p.images,
         "specs": p.specs, "spec_schema": cat.spec_schema, "category": cat_out(cat), "tags": p.tags,
-        "score_breakdown": p.score_breakdown, "durability_score": p.durability_score,
+        "score_breakdown": p.score_breakdown,
+        "badge_basis": {b: scoring.BADGE_BASIS.get(b, "") for b in (p.badges or [])},
+        "disclaimer": scoring.DISCLAIMER, "durability_score": p.durability_score,
         "fake_review_ratio": p.fake_review_ratio, "fake_reviews_removed": hidden,
         "external_ratings": [{"source": e.source, "rating": e.rating, "rating_count": e.rating_count, "url": e.url,
                               "fetched_at": e.fetched_at.isoformat()} for e in ext],
