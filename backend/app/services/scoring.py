@@ -191,7 +191,7 @@ BADGE_BASIS = {
     BADGE_BEST_CHOICE: "Kategorideki En İyi Seçim puanı en yüksek ürün.",
 }
 
-DISCLAIMER = ("Puanlar, rozetler ve yapay zeka değerlendirmeleri; diğer platformlardaki puanlar ve BinÖlçBirAl "
+DISCLAIMER = ("Puanlar, rozetler ve yapay zeka değerlendirmeleri; diğer platformlardaki puanlar ve Dengi "
               "kullanıcılarının yorumlarından otomatik olarak hesaplanır. Bilgilendirme amaçlıdır, hata içerebilir; "
               "ürün veya marka hakkında bir iddia ya da satın alma tavsiyesi değildir. Hatalı olduğunu düşündüğünüz "
               "bilgiler için itiraz edebilirsiniz.")

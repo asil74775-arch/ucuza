@@ -29,7 +29,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BinÖlçBirAl', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text('Dengi', style: TextStyle(fontWeight: FontWeight.w900)),
         actions: [
           IconButton(tooltip: 'Mesajlar', icon: const Icon(Icons.chat_bubble_outline), onPressed: () => context.push('/messages')),
         ],

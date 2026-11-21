@@ -19,7 +19,7 @@ import httpx
 
 from ..config import get_settings
 
-log = logging.getLogger("binolcbiral.gemini")
+log = logging.getLogger("dengi.gemini")
 BASE = "https://generativelanguage.googleapis.com"
 
 

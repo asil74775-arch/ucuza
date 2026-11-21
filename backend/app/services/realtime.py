@@ -11,7 +11,7 @@ from fastapi import WebSocket
 
 from ..config import get_settings
 
-log = logging.getLogger("binolcbiral.ws")
+log = logging.getLogger("dengi.ws")
 
 
 class Hub:
@@ -29,7 +29,7 @@ class Hub:
 
     async def _listen(self) -> None:
         pubsub = self.redis.pubsub()
-        await pubsub.subscribe("binolcbiral:ws")
+        await pubsub.subscribe("dengi:ws")
         async for msg in pubsub.listen():
             if msg.get("type") == "message":
                 data = json.loads(msg["data"])
@@ -55,7 +55,7 @@ class Hub:
 
     async def send(self, user_ids: list[int], event: dict) -> None:
         if self.redis:
-            await self.redis.publish("binolcbiral:ws", json.dumps({"user_ids": user_ids, "event": event}, default=str))
+            await self.redis.publish("dengi:ws", json.dumps({"user_ids": user_ids, "event": event}, default=str))
         else:
             await self._deliver_local(user_ids, event)
 

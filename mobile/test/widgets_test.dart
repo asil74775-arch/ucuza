@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:binolcbiral/core/models.dart';
-import 'package:binolcbiral/core/widgets.dart';
+import 'package:dengi/core/models.dart';
+import 'package:dengi/core/widgets.dart';
 
 void main() {
   setUpAll(() => initializeDateFormatting('tr_TR'));

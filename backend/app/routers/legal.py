@@ -1,7 +1,7 @@
 """Yasal metinler (herkese açık web sayfaları) ve hak ihlali / itiraz / KVKK başvuruları.
 
 Play Store'un istediği gizlilik politikası ve hesap silme adresleri buradan sunulur:
-  https://api.binolcbiral.com/legal/gizlilik   https://api.binolcbiral.com/legal/hesap-silme
+  https://api.dengi.com/legal/gizlilik   https://api.dengi.com/legal/hesap-silme
 """
 import html
 import re
@@ -69,7 +69,7 @@ def md_to_html(md: str) -> str:
 
 
 PAGE = """<!doctype html><html lang="tr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>{title} — BinÖlçBirAl</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>{title} — Dengi</title>
 <style>body{{font-family:system-ui,sans-serif;max-width:760px;margin:0 auto;padding:16px;line-height:1.6;color:#1a1a1a}}
 h1{{color:#5B3DF5}}a{{color:#5B3DF5}}nav a{{margin-right:12px}}</style></head><body>
 <nav>{nav}</nav>{body}</body></html>"""
@@ -78,7 +78,7 @@ h1{{color:#5B3DF5}}a{{color:#5B3DF5}}nav a{{margin-right:12px}}</style></head><b
 @router.get("/legal", response_class=HTMLResponse)
 async def legal_index():
     links = "".join(f'<li><a href="/legal/{k}">{v}</a></li>' for k, v in DOCS.items())
-    return PAGE.format(title="Yasal", nav="", body=f"<h1>BinÖlçBirAl yasal metinler</h1><ul>{links}</ul>")
+    return PAGE.format(title="Yasal", nav="", body=f"<h1>Dengi yasal metinler</h1><ul>{links}</ul>")
 
 
 @router.get("/legal/{slug}", response_class=HTMLResponse)

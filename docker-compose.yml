@@ -2,12 +2,12 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: binolcbiral
-      POSTGRES_PASSWORD: binolcbiral
-      POSTGRES_DB: binolcbiral
+      POSTGRES_USER: dengi
+      POSTGRES_PASSWORD: dengi
+      POSTGRES_DB: dengi
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U binolcbiral"]
+      test: ["CMD-SHELL", "pg_isready -U dengi"]
       interval: 5s
       retries: 10
   redis:

@@ -72,7 +72,7 @@ class ProfileScreen extends ConsumerWidget {
         const ListTile(
           leading: Icon(Icons.info_outline),
           title: Text('Affiliate bilgilendirmesi'),
-          subtitle: Text('BinÖlçBirAl, satıcı bağlantıları üzerinden yapılan alışverişlerden komisyon alabilir. Bu, sıralamaları etkilemez.'),
+          subtitle: Text('Dengi, satıcı bağlantıları üzerinden yapılan alışverişlerden komisyon alabilir. Bu, sıralamaları etkilemez.'),
         ),
         ListTile(leading: const Icon(Icons.logout), title: const Text('Çıkış yap'), onTap: () => ref.read(authProvider.notifier).logout()),
         ListTile(
@@ -100,7 +100,7 @@ class ProfileScreen extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 24),
-        const Center(child: Text('BinÖlçBirAl v1.0.0', style: TextStyle(color: Colors.grey))),
+        const Center(child: Text('Dengi v1.0.0', style: TextStyle(color: Colors.grey))),
         const SizedBox(height: 24),
       ]),
     );

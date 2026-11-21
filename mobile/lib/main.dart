@@ -9,15 +9,15 @@ import 'core/theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('tr_TR');
-  runApp(const ProviderScope(child: BinOlcBirAlApp()));
+  runApp(const ProviderScope(child: DengiApp()));
 }
 
-class BinOlcBirAlApp extends ConsumerWidget {
-  const BinOlcBirAlApp({super.key});
+class DengiApp extends ConsumerWidget {
+  const DengiApp({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'BinÖlçBirAl',
+      title: 'Dengi',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
