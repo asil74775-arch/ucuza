@@ -46,7 +46,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 
   void _connect() {
     final token = ref.read(apiProvider).token;
-    if (token == null) return;
+    if (token == null || demoMode) return;
     ws = WebSocketChannel.connect(Uri.parse('$wsUrl/ws?token=$token'));
     sub = ws!.stream.listen((raw) {
       final ev = jsonDecode(raw as String) as Map<String, dynamic>;

@@ -43,7 +43,7 @@ jobs:
             --no-web-resources-cdn \
             --no-wasm-dry-run \
             --base-href /ucuza/ \
-            --dart-define=API_URL=https://api.fiyatradar.com
+            --dart-define=DEMO=true
 
       - name: SPA fallback for deep links
         run: cp mobile/build/web/index.html mobile/build/web/404.html

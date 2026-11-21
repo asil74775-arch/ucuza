@@ -2,7 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'demo_api.dart';
+
 /// Derleme sırasında: flutter build appbundle --dart-define=API_URL=https://api.fiyatradar.net.tr
+/// Sunucusuz deneme: --dart-define=DEMO=true → istekler örnek verilerle yanıtlanır.
+const demoMode = bool.fromEnvironment('DEMO', defaultValue: false);
+
 const apiUrl = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:8000');
 
 String get wsUrl => apiUrl.replaceFirst('http', 'ws');
@@ -22,6 +27,7 @@ class Api {
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 120), // AI uçları uzun sürebilir
     ));
+    if (demoMode) dio.interceptors.add(DemoInterceptor());
     dio.interceptors.add(InterceptorsWrapper(onRequest: (o, h) async {
       final t = token ?? await _storage.read(key: 'token');
       if (t != null) o.headers['Authorization'] = 'Bearer $t';
