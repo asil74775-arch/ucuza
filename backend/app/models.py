@@ -294,6 +294,7 @@ class VideoJob(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     file_path: Mapped[str] = mapped_column(String(500))
+    source_url: Mapped[str | None] = mapped_column(String(2000))
     status: Mapped[str] = mapped_column(String(20), default="queued")  # queued|processing|done|failed
     stage: Mapped[str] = mapped_column(String(60), default="")
     product_id: Mapped[int | None] = mapped_column(ForeignKey("products.id", ondelete="SET NULL"))

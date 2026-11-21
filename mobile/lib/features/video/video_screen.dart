@@ -26,6 +26,20 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
   Map<String, dynamic>? job;
   Timer? poll;
 
+  Future<void> pickUrl(String url) async {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return;
+    setState(() { job = null; stage = 'İndiriliyor'; upload = 0; });
+    try {
+      final r = await ref.read(apiProvider).post<Map<String, dynamic>>(
+        '/ai/video/from-url', data: {'url': trimmed});
+      _poll(r['job_id']);
+    } catch (e) {
+      if (mounted) toast(context, e.toString());
+      setState(() => stage = null);
+    }
+  }
+
   Future<void> pick(ImageSource src) async {
     final f = await ImagePicker().pickVideo(source: src, maxDuration: const Duration(minutes: 3));
     if (f == null) return;
@@ -87,7 +101,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
           ]),
         ),
         body: TabBarView(children: [
-          _VideoTab(res: res, job: job, stage: stage, upload: upload, player: player, onPick: pick),
+          _VideoTab(res: res, job: job, stage: stage, upload: upload, player: player, onPick: pick, onUrl: pickUrl),
           const PhotoSearchScreen(),
         ]),
       ),
@@ -103,6 +117,7 @@ class _VideoTab extends StatelessWidget {
   final double upload;
   final VideoPlayerController? player;
   final Future<void> Function(ImageSource) onPick;
+  final Future<void> Function(String) onUrl;
 
   const _VideoTab({
     required this.res,
@@ -111,15 +126,41 @@ class _VideoTab extends StatelessWidget {
     required this.upload,
     required this.player,
     required this.onPick,
+    required this.onUrl,
   });
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = TextEditingController();
     return ListView(padding: const EdgeInsets.all(16), children: [
-        const Text('Bir ürün videosu yükle (inceleme, reklam, sosyal medya videosu). Yapay zeka ürünü tespit eder, '
+        const Text('Bir ürün videosu yükle veya link yapıştır (YouTube, Instagram, TikTok). Yapay zeka ürünü tespit eder, '
             'sistemde yoksa internetten bulup ekler; yorumları, sahte yorumları, fiyat geçmişini ve alternatifleri '
             'kontrol ederek almaya değip değmeyeceğini söyler.'),
         const SizedBox(height: 12),
+        Row(children: [
+          Expanded(
+            child: TextField(
+              controller: ctrl,
+              decoration: const InputDecoration(
+                hintText: 'YouTube / Instagram / TikTok linki',
+                prefixIcon: Icon(Icons.link),
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              keyboardType: TextInputType.url,
+              textInputAction: TextInputAction.go,
+              onSubmitted: onUrl,
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: () => onUrl(ctrl.text),
+            child: const Text('Analiz Et'),
+          ),
+        ]),
+        const SizedBox(height: 8),
+        const Divider(),
+        const SizedBox(height: 4),
         Row(children: [
           Expanded(child: FilledButton.icon(onPressed: () => onPick(ImageSource.gallery), icon: const Icon(Icons.video_library), label: const Text('Galeriden'))),
           const SizedBox(width: 8),

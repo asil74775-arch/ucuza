@@ -6,9 +6,12 @@ geçmişini/alternatifleri kontrol et -> karar.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
+import tempfile
 from pathlib import Path
 
+from fastapi import HTTPException
 from sqlalchemy import func, or_, select
 
 from ..db import SessionLocal
@@ -17,6 +20,39 @@ from . import assistant, catalog, pipeline
 from .gemini import GeminiError, gemini
 
 log = logging.getLogger("fiyatradar.video")
+
+_ALLOWED_HOSTS = {"youtube.com", "www.youtube.com", "youtu.be", "m.youtube.com",
+                  "instagram.com", "www.instagram.com", "tiktok.com", "www.tiktok.com",
+                  "twitter.com", "x.com"}
+
+
+async def download_url(url: str) -> str:
+    """yt-dlp ile video URL'sini indirip geçici dosya yolu döndürür."""
+    from urllib.parse import urlparse
+    host = urlparse(url).hostname or ""
+    if not any(host == h or host.endswith("." + h) for h in _ALLOWED_HOSTS):
+        raise HTTPException(400, "Desteklenmeyen video platformu. YouTube, Instagram veya TikTok linki girin.")
+    tmp = tempfile.mkdtemp(prefix="fiyatradar_vid_")
+    out_tmpl = str(Path(tmp) / "video.%(ext)s")
+    cmd = [
+        "yt-dlp",
+        "--no-playlist",
+        "--max-filesize", "200M",
+        "-f", "bestvideo[ext=mp4][height<=720]+bestaudio[ext=m4a]/best[ext=mp4][height<=720]/best",
+        "-o", out_tmpl,
+        url,
+    ]
+    proc = await asyncio.create_subprocess_exec(
+        *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+    _, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
+    if proc.returncode != 0:
+        log.warning("yt-dlp error: %s", stderr.decode()[-500:])
+        raise HTTPException(422, "Video indirilemedi. Linki kontrol edin veya özel/kısıtlı içerik olabilir.")
+    files = list(Path(tmp).iterdir())
+    if not files:
+        raise HTTPException(422, "Video indirilemedi.")
+    return str(files[0])
 
 DETECT_SCHEMA = {
     "type": "OBJECT",

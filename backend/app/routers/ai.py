@@ -137,6 +137,23 @@ async def upload_video(bg: BackgroundTasks, file: UploadFile = File(...), user: 
     return {"job_id": job.id, "status": job.status}
 
 
+class VideoUrlRequest(BaseModel):
+    url: str
+
+
+@router.post("/video/from-url")
+async def video_from_url(body: VideoUrlRequest, bg: BackgroundTasks,
+                         user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    if not user.ai_consent:
+        raise HTTPException(403, "Video analizi için Profil > Gizlilik bölümünden yapay zeka açık rızası vermelisiniz.")
+    path = await video.download_url(body.url)
+    job = VideoJob(user_id=user.id, file_path=path, source_url=body.url)
+    db.add(job)
+    await db.commit()
+    bg.add_task(video.process, job.id)
+    return {"job_id": job.id, "status": job.status}
+
+
 @router.get("/video/{jid}")
 async def video_status(jid: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     j = await db.get(VideoJob, jid)
