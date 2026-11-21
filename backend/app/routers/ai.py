@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..core.security import current_user
 from ..db import get_db
 from ..models import AiMessage, AiSession, Product, User, VideoJob
-from ..services import assistant, catalog, storage, video
+from ..services import assistant, catalog, photo_search, storage, video
 from ..services.gemini import gemini
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -143,3 +143,18 @@ async def video_status(jid: int, user: User = Depends(current_user), db: AsyncSe
     if not j or j.user_id != user.id:
         raise HTTPException(404)
     return {"job_id": j.id, "status": j.status, "stage": j.stage, "result": j.result, "error": j.error}
+
+
+@router.post("/photo-search")
+async def photo_search_endpoint(
+    file: UploadFile = File(...),
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Fotoğraf yükle → ürünü tanı → katalogda bul/ekle → verdict döndür."""
+    if not user.ai_consent:
+        raise HTTPException(403, "Fotoğraf arama için Profil > Gizlilik bölümünden yapay zeka açık rızası vermelisiniz.")
+    path, _, kind = await storage.save_upload(file, "photo_search")
+    if kind != "image":
+        raise HTTPException(415, "Lütfen bir fotoğraf yükleyin (JPEG, PNG veya WebP)")
+    return await photo_search.search(db, user, path)

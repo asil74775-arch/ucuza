@@ -9,9 +9,10 @@ import 'package:video_player/video_player.dart';
 import '../../core/api.dart';
 import '../../core/models.dart';
 import '../../core/widgets.dart';
+import '../ai/photo_search_screen.dart';
 import '../ai/verdict_card.dart';
 
-/// Video ile ürün keşfi + "almaya değer mi?" analizi.
+/// Video veya fotoğraf ile ürün keşfi + "almaya değer mi?" analizi.
 class VideoScreen extends ConsumerStatefulWidget {
   const VideoScreen({super.key});
   @override
@@ -75,17 +76,54 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
   @override
   Widget build(BuildContext context) {
     final res = job?['result'] as Map?;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Video ile Ürün Analizi')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Medya ile Ürün Analizi'),
+          bottom: const TabBar(tabs: [
+            Tab(icon: Icon(Icons.videocam), text: 'Video'),
+            Tab(icon: Icon(Icons.camera_alt), text: 'Fotoğraf'),
+          ]),
+        ),
+        body: TabBarView(children: [
+          _VideoTab(res: res, job: job, stage: stage, upload: upload, player: player, onPick: pick),
+          const PhotoSearchScreen(),
+        ]),
+      ),
+    );
+  }
+}
+
+// ignore: must_be_immutable
+class _VideoTab extends StatelessWidget {
+  final Map? res;
+  final Map<String, dynamic>? job;
+  final String? stage;
+  final double upload;
+  final VideoPlayerController? player;
+  final Future<void> Function(ImageSource) onPick;
+
+  const _VideoTab({
+    required this.res,
+    required this.job,
+    required this.stage,
+    required this.upload,
+    required this.player,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(padding: const EdgeInsets.all(16), children: [
         const Text('Bir ürün videosu yükle (inceleme, reklam, sosyal medya videosu). Yapay zeka ürünü tespit eder, '
             'sistemde yoksa internetten bulup ekler; yorumları, sahte yorumları, fiyat geçmişini ve alternatifleri '
             'kontrol ederek almaya değip değmeyeceğini söyler.'),
         const SizedBox(height: 12),
         Row(children: [
-          Expanded(child: FilledButton.icon(onPressed: () => pick(ImageSource.gallery), icon: const Icon(Icons.video_library), label: const Text('Galeriden'))),
+          Expanded(child: FilledButton.icon(onPressed: () => onPick(ImageSource.gallery), icon: const Icon(Icons.video_library), label: const Text('Galeriden'))),
           const SizedBox(width: 8),
-          Expanded(child: OutlinedButton.icon(onPressed: () => pick(ImageSource.camera), icon: const Icon(Icons.videocam), label: const Text('Kaydet'))),
+          Expanded(child: OutlinedButton.icon(onPressed: () => onPick(ImageSource.camera), icon: const Icon(Icons.videocam), label: const Text('Kaydet'))),
         ]),
         if (player != null && player!.value.isInitialized) ...[
           const SizedBox(height: 12),

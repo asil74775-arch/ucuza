@@ -26,6 +26,7 @@ import '../features/shell/home_shell.dart';
 import '../features/social/create_experience_screen.dart';
 import '../features/social/explore_screen.dart';
 import '../features/social/qa_screen.dart';
+import '../features/ai/photo_search_screen.dart';
 import '../features/video/video_screen.dart';
 import 'session.dart';
 
@@ -76,6 +77,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/ai/project', builder: (_, __) => const ProjectScreen()),
       GoRoute(path: '/ai/duel', builder: (_, s) => DuelScreen(initialA: s.extra as Map<String, dynamic>?)),
       GoRoute(path: '/ai/video', builder: (_, __) => const VideoScreen()),
+      GoRoute(path: '/ai/photo-search', builder: (_, __) => const PhotoSearchScreen()),
       GoRoute(path: '/messages', builder: (_, __) => const ConversationsScreen()),
       GoRoute(
         path: '/messages/:id',
