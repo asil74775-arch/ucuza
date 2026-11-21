@@ -71,7 +71,7 @@ class _NoticeScreenState extends ConsumerState<NoticeScreen> {
         const SizedBox(height: 16),
         FilledButton(onPressed: busy ? null : send, child: const Text('Gönder')),
         const SizedBox(height: 8),
-        const Text('Bildirimler en geç 48 saat içinde incelenir. Haklı bulunan içerik kaldırılır veya düzeltilir.',
+        const Text('Bildirimler en geç 7 gün içinde incelenir. Haklı bulunan içerik kaldırılır veya düzeltilir.',
             style: TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 8),
         const LegalLink('yontem', label: 'Puan ve etiketler nasıl hesaplanıyor?'),

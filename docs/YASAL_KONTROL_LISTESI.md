@@ -25,7 +25,7 @@
 
 ## [SİZ] Yayından sonra (sürekli)
 1. Uygulamaya kendi e-postanızla kaydolun ve sunucuda `python -m scripts.make_admin sizin@eposta.com` çalıştırın.
-2. **Her gün** `GET /admin/notices` ve `GET /admin/reports` listesini kontrol edin. Hak ihlali ve itirazları **48 saat içinde** yanıtlayın (bunu koşullarda taahhüt ettik). Haklı bir itirazda içeriği gizleyin veya hatalı veriyi düzeltin. Şüphede kalırsanız içeriği gizlemek, yayında tutmaktan daha güvenlidir.
+2. Uygulamada **Profil > Yönetici Paneli**'ni en az **haftada iki kez** açın. Hak ihlali ve itirazları **7 gün içinde** yanıtlayın (bunu koşullarda taahhüt ettik). **İstisna:** mahkeme, savcılık veya BTK'dan gelen kaldırma kararları beklemez; kararda yazan süre içinde (genelde 24 saat) uygulanmalıdır. Haklı bir itirazda içeriği gizleyin veya hatalı veriyi düzeltin. Şüphede kalırsanız içeriği gizlemek, yayında tutmaktan daha güvenlidir.
 3. KVKK başvurularına (bilgi, silme talebi) **30 gün içinde** e-postayla yanıt verin.
 4. Puan kriterlerini hiçbir marka lehine değiştirmeyin; ücret karşılığı sıralama veya rozet satmayın. (Satarsanız bunun "reklam" olarak açıkça etiketlenmesi gerekir.)
 5. Koşulları değiştirirseniz `TERMS_VERSION` değerini artırın.

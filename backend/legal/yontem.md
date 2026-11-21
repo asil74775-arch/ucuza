@@ -27,4 +27,4 @@ Aynı kategorideki ürünlerle karşılaştırılarak hesaplanır: fiyat %15, pu
 - **Popüler Ama Aşırı Pahalı:** en çok puanlanan ve en pahalı ürünler arasında olup fiyat/performansı kategorinin alt yarısında.
 
 ## Hata ve itiraz
-Bir bilginin hatalı olduğunu düşünüyorsanız (marka veya satıcıysanız da) uygulamadaki **Hak ihlali / itiraz** formunu ya da {contact_email} adresini kullanın. İtirazlar 48 saat içinde incelenir ve haklı bulunan hatalar düzeltilir.
+Bir bilginin hatalı olduğunu düşünüyorsanız (marka veya satıcıysanız da) uygulamadaki **Hak ihlali / itiraz** formunu ya da {contact_email} adresini kullanın. İtirazlar en geç 7 gün içinde incelenir ve haklı bulunan hatalar düzeltilir.

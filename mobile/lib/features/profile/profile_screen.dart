@@ -40,6 +40,13 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
         ListTile(leading: const Icon(Icons.construction), title: const Text('Projelerim'), onTap: () => context.go('/cart')),
+        if (user?['is_admin'] == true)
+          ListTile(
+            leading: const Icon(Icons.admin_panel_settings, color: Colors.deepPurple),
+            title: const Text('Yönetici Paneli'),
+            subtitle: const Text('Hak ihlali bildirimleri ve kullanıcı şikayetleri'),
+            onTap: () => context.push('/admin'),
+          ),
         const Divider(),
         const SectionTitle('Gizlilik', icon: Icons.privacy_tip_outlined),
         SwitchListTile(

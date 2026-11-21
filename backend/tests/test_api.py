@@ -119,3 +119,23 @@ async def test_legal(client):
     pid = (await client.get("/products", params={"q": "X-Phone"})).json()[0]["id"]
     d = (await client.get(f"/products/{pid}")).json()
     assert d["disclaimer"] and d["badge_basis"].get("Yüksek Riskli")
+
+
+async def test_admin(client):
+    from sqlalchemy import update
+    from app.db import SessionLocal
+    from app.models import User
+    async with SessionLocal() as db:
+        await db.execute(update(User).where(User.email == "a@b.co").values(is_admin=True))
+        await db.commit()
+    assert (await client.get("/auth/me")).json()["is_admin"]
+    exp = (await client.get("/explore")).json()[0]
+    await client.post("/reports", json={"target_type": "experience", "target_id": exp["id"], "reason": "Spam veya reklam"})
+    reps = (await client.get("/admin/reports")).json()
+    assert reps and reps[0]["text"]
+    await client.post("/admin/reports/resolve", json={"target_type": "experience", "target_id": exp["id"], "hide": True})
+    assert not (await client.get("/admin/reports")).json()
+    notices = (await client.get("/admin/notices")).json()
+    assert notices and "days_open" in notices[0]
+    r = await client.post(f"/admin/notices/{notices[0]['id']}", json={"accept": False, "resolution": "Veri doğru"})
+    assert r.json()["status"] == "rejected"

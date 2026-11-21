@@ -31,7 +31,7 @@ class LoginIn(BaseModel):
 
 def user_out(u: User) -> dict:
     return {"id": u.id, "email": u.email, "display_name": u.display_name, "avatar_url": u.avatar_url,
-            "ai_consent": u.ai_consent, "terms_version": u.terms_version,
+            "ai_consent": u.ai_consent, "is_admin": u.is_admin, "terms_version": u.terms_version,
             "terms_outdated": u.terms_version != get_settings().terms_version}
 
 

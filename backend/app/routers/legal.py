@@ -112,7 +112,15 @@ async def create_notice(body: NoticeIn, db: AsyncSession = Depends(get_db)):
     n = LegalNotice(**body.model_dump())
     db.add(n)
     await db.commit()
-    return {"id": n.id, "message": "Bildiriminiz alındı. En geç 48 saat içinde incelenecek ve e-posta ile yanıt verilecek."}
+    return {"id": n.id, "message": "Bildiriminiz alındı. En geç 7 gün içinde incelenecek ve e-posta ile yanıt verilecek."}
+
+
+async def _target_preview(db: AsyncSession, ttype: str | None, tid: int | None) -> dict:
+    model = {"experience": Experience, "question": Question, "answer": Answer}.get(ttype or "")
+    if not model or not tid:
+        return {}
+    obj = await db.get(model, tid)
+    return {"text": obj.text, "is_hidden": obj.is_hidden} if obj else {"text": "(silinmiş)", "is_hidden": True}
 
 
 async def admin(user: User = Depends(current_user)) -> User:
@@ -126,10 +134,14 @@ async def list_notices(status: str = "open", _: User = Depends(admin), db: Async
     rows = (await db.scalars(select(LegalNotice).where(LegalNotice.status == status)
                              .order_by(LegalNotice.created_at))).all()
     now = datetime.now(timezone.utc)
-    return [{"id": n.id, "kind": n.kind, "name": n.name, "email": n.email, "target_type": n.target_type,
+    out = []
+    for n in rows:
+        out.append({"id": n.id, "kind": n.kind, "name": n.name, "email": n.email, "target_type": n.target_type,
              "target_id": n.target_id, "description": n.description, "created_at": n.created_at.isoformat(),
-             "hours_open": round((now - n.created_at.replace(tzinfo=n.created_at.tzinfo or timezone.utc))
-                                 .total_seconds() / 3600, 1)} for n in rows]
+             "days_open": round((now - n.created_at.replace(tzinfo=n.created_at.tzinfo or timezone.utc))
+                                 .total_seconds() / 86400, 1),
+             "target": await _target_preview(db, n.target_type, n.target_id)})
+    return out
 
 
 class ResolveIn(BaseModel):
@@ -156,7 +168,39 @@ async def resolve_notice(nid: int, body: ResolveIn, _: User = Depends(admin), db
 
 @router.get("/admin/reports")
 async def list_reports(_: User = Depends(admin), db: AsyncSession = Depends(get_db)):
+    """Kullanıcıların uygulama içinden yaptığı şikayetler (içerik başına gruplanmış)."""
     from ..models import Report
     rows = (await db.scalars(select(Report).where(Report.status == "open").order_by(Report.created_at))).all()
-    return [{"id": r.id, "target_type": r.target_type, "target_id": r.target_id, "reason": r.reason,
-             "created_at": r.created_at.isoformat()} for r in rows]
+    groups: dict[tuple, dict] = {}
+    for r in rows:
+        g = groups.setdefault((r.target_type, r.target_id), {
+            "target_type": r.target_type, "target_id": r.target_id, "reasons": [], "report_ids": [],
+            "first_at": r.created_at.isoformat()})
+        g["reasons"].append(r.reason)
+        g["report_ids"].append(r.id)
+    out = []
+    for g in groups.values():
+        out.append({**g, "count": len(g["report_ids"]), **await _target_preview(db, g["target_type"], g["target_id"])})
+    return out
+
+
+class ReportResolveIn(BaseModel):
+    target_type: str
+    target_id: int
+    hide: bool  # True: içeriği gizle · False: şikayeti reddet ve içeriği yayında tut / geri aç
+
+
+@router.post("/admin/reports/resolve")
+async def resolve_reports(body: ReportResolveIn, _: User = Depends(admin), db: AsyncSession = Depends(get_db)):
+    from ..models import Report
+    model = {"experience": Experience, "question": Question, "answer": Answer}.get(body.target_type)
+    if model:
+        obj = await db.get(model, body.target_id)
+        if obj:
+            obj.is_hidden = body.hide
+    for r in (await db.scalars(select(Report).where(Report.target_type == body.target_type,
+                                                    Report.target_id == body.target_id,
+                                                    Report.status == "open"))).all():
+        r.status = "hidden" if body.hide else "rejected"
+    await db.commit()
+    return {"ok": True}

@@ -15,6 +15,7 @@ import '../features/auth/onboarding_screen.dart';
 import '../features/cart/cart_screen.dart';
 import '../features/catalog/category_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/legal/admin_screen.dart';
 import '../features/legal/notice_screen.dart';
 import '../features/messages/chat_thread_screen.dart';
 import '../features/messages/conversations_screen.dart';
@@ -81,6 +82,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => ChatThreadScreen(conversationId: int.parse(s.pathParameters['id']!), title: s.extra as String? ?? 'Sohbet'),
       ),
       GoRoute(path: '/taste', builder: (_, __) => const TasteScreen()),
+      GoRoute(path: '/admin', builder: (_, __) => const AdminScreen()),
       GoRoute(path: '/notice', builder: (_, s) => NoticeScreen(target: s.extra as Map<String, dynamic>?)),
     ],
   );

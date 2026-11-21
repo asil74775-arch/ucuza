@@ -26,7 +26,7 @@ Yorum, fotoğraf, video, soru, cevap ve mesajlarınızdan siz sorumlusunuz. Şun
 Bu kurallara aykırı veya sahte olma ihtimali yüksek içerikleri önceden bildirmeksizin gizleyebilir veya kaldırabilir, tekrarlayan ihlallerde hesabı kapatabiliriz. İçeriklerinizin uygulamada gösterilmesi için bize, hizmet süresince geçerli, ücretsiz ve münhasır olmayan bir kullanım izni vermiş olursunuz; içeriğinizi sildiğinizde bu izin sona erer.
 
 ## 5. Hak ihlali bildirimi ve itiraz
-Bir içeriğin hukuka aykırı olduğunu, haklarınızı ihlal ettiğini veya bir ürün/marka hakkındaki bilginin hatalı olduğunu düşünüyorsanız, uygulamadaki **Hak ihlali / itiraz** formunu veya {contact_email} adresini kullanın. Bildirimler en geç 48 saat içinde incelenir; haklı bulunan içerik kaldırılır veya düzeltilir. 5651 sayılı Kanun kapsamında Ucuza.com, kullanıcı içerikleri bakımından yer sağlayıcıdır.
+Bir içeriğin hukuka aykırı olduğunu, haklarınızı ihlal ettiğini veya bir ürün/marka hakkındaki bilginin hatalı olduğunu düşünüyorsanız, uygulamadaki **Hak ihlali / itiraz** formunu veya {contact_email} adresini kullanın. Bildirimler en geç 7 gün içinde incelenir; haklı bulunan içerik kaldırılır veya düzeltilir. Mahkeme veya yetkili kurum kararlarıyla gelen kaldırma talepleri ise kararda belirtilen süre içinde derhal uygulanır. 5651 sayılı Kanun kapsamında Ucuza.com, kullanıcı içerikleri bakımından yer sağlayıcıdır.
 
 ## 6. Ortaklık (affiliate) bağlantıları
 Satıcı bağlantıları ortaklık bağlantısı olabilir. Bu bağlantılar üzerinden alışveriş yaparsanız Ucuza.com, size ek maliyet olmadan satıcıdan komisyon alabilir. Komisyon, puanları ve sıralamaları **etkilemez**.
