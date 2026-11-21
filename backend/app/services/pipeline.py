@@ -1,7 +1,9 @@
 """Ürün analiz boru hattı.
 
-refresh_product:  kaynaklardan yorum+teklif çek -> analyze_reviews -> rescore_category
-analyze_reviews:  kural + Gemini ile AI yıldız, duygu, şikayet, sahte olasılığı; kronik tespit
+refresh_product:  kaynaklardan teklif + PUAN çek -> analyze_reviews -> rescore_category
+analyze_reviews:  KIYASLIO KULLANICI YORUMLARI üzerinde kural + Gemini ile AI yıldız, duygu,
+                  şikayet, sahte olasılığı; kronik tespit; dış puanlarla birleşik ortalama
+Dış kaynaklardan yorum metni TOPLANMAZ; yalnızca puan ortalaması ve puan sayısı alınır.
 rescore_category: En İyi Seçim / F/P puanı + güven rozetleri
 discover:         sistemde olmayan ürünü internetteki lisanslı kaynaklardan bulup ekler
 """
@@ -15,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import get_settings
 from ..models import (
-    Brand, Category, ChronicIssue, Offer, PriceHistory, Product, RatingHistory, Review,
+    Brand, Category, ChronicIssue, Experience, ExternalRating, Offer, PriceHistory, Product, RatingHistory,
 )
 from . import chronic, fake_reviews, scoring
 from .gemini import GeminiError, gemini
@@ -25,14 +27,26 @@ from .sources.base import FoundProduct
 log = logging.getLogger("kiyaslio.pipeline")
 
 
-# ------------------------------------------------------------------ Yorum analizi
+# ------------------------------------------------------------------ Puan birleştirme
+async def combined_rating(db: AsyncSession, product: Product) -> None:
+    """avg_rating = dış platform puanları + Kıyaslio yorum puanları (puan sayısına göre ağırlıklı)."""
+    ext = (await db.scalars(select(ExternalRating).where(ExternalRating.product_id == product.id))).all()
+    ext_sum = sum(e.rating * e.rating_count for e in ext)
+    ext_n = sum(e.rating_count for e in ext)
+    own_n = product.review_count
+    own_sum = product.ai_rating * own_n
+    product.external_rating_count = ext_n
+    product.rating_count = ext_n + own_n
+    product.avg_rating = round((ext_sum + own_sum) / (ext_n + own_n), 2) if ext_n + own_n else 0
+
+
+# ------------------------------------------------------------------ Yorum analizi (yalnızca uygulama içi)
 async def analyze_reviews(db: AsyncSession, product_id: int) -> dict:
     s = get_settings()
-    reviews = (await db.scalars(select(Review).where(Review.product_id == product_id))).all()
-    if not reviews:
-        return {"total": 0}
-    lite = [fake_reviews.ReviewLite(r.id, r.text, r.source_rating, r.posted_at, r.author) for r in reviews]
-    heur = {v.id: v for v in fake_reviews.heuristic_scores(lite)}
+    reviews = (await db.scalars(select(Experience).where(Experience.product_id == product_id))).unique().all()
+    product = await db.get(Product, product_id)
+    lite = [fake_reviews.ReviewLite(r.id, r.text, float(r.rating), r.created_at, str(r.user_id)) for r in reviews]
+    heur = {v.id: v for v in fake_reviews.heuristic_scores(lite)} if lite else {}
 
     ai: dict[int, dict] = {}
     pending = [r for r in reviews if not r.analyzed]
@@ -40,7 +54,7 @@ async def analyze_reviews(db: AsyncSession, product_id: int) -> dict:
         for i in range(0, len(pending), 25):
             chunk = pending[i:i + 25]
             prompt = "Yorumları analiz et:\n" + "\n".join(
-                f"[id={r.id}] (kaynak puanı: {r.source_rating or '-'}) {r.text[:800]}" for r in chunk)
+                f"[id={r.id}] (kullanıcı puanı: {r.rating}) {r.text[:800]}" for r in chunk)
             try:
                 for row in await gemini.json(prompt, fake_reviews.AI_SCHEMA, system=fake_reviews.AI_SYSTEM):
                     ai[int(row["id"])] = row
@@ -50,33 +64,36 @@ async def analyze_reviews(db: AsyncSession, product_id: int) -> dict:
     for r in reviews:
         h = heur[r.id]
         a = ai.get(r.id)
+        if not r.content_hash:
+            r.content_hash = fake_reviews.content_hash(r.text)
         if a:
             r.ai_stars = max(1.0, min(5.0, float(a["stars"])))
             r.sentiment = a["sentiment"]
             r.complaints = a.get("complaints", [])
-            reasons = list(h.reasons) + ([a["fake_reason"]] if a.get("fake_reason") and a["fake_probability"] > 0.4 else [])
+            extra = [a["fake_reason"]] if a.get("fake_reason") and a["fake_probability"] > 0.4 else []
             r.fake_probability = fake_reviews.combine(h.probability, float(a["fake_probability"]))
-            r.fake_reasons = reasons
+            r.fake_reasons = list(h.reasons) + extra
             r.analyzed = True
         else:
-            if r.ai_stars is None:  # AI yoksa: kaynak puanı veya basit sözlük duygu analizi
-                r.ai_stars = r.source_rating or _lexicon_stars(r.text)
-                r.sentiment = "pos" if r.ai_stars >= 4 else "neg" if r.ai_stars <= 2 else "neu"
-                r.complaints = r.complaints or _lexicon_complaints(r.text)
+            if r.ai_stars is None:  # AI yoksa: kullanıcının verdiği puan + sözlük tabanlı şikayet çıkarımı
+                r.ai_stars = float(r.rating)
+                r.sentiment = "pos" if r.rating >= 4 else "neg" if r.rating <= 2 else "neu"
+                r.complaints = r.complaints or _lexicon_complaints(r.text, r.rating)
             r.fake_probability = max(h.probability, r.fake_probability if r.analyzed else 0)
             r.fake_reasons = h.reasons or r.fake_reasons
-        r.is_hidden = r.fake_probability >= s.fake_hide_threshold
+        # Sahte yorum: gizlenir. Moderasyonla gizlenmiş yorum sahte değilse bile gizli kalır.
+        if r.fake_probability >= s.fake_hide_threshold:
+            r.is_hidden = True
 
     visible = [r for r in reviews if not r.is_hidden]
-    product = await db.get(Product, product_id)
-    product.rating_count = len(visible)
-    product.ai_rating = round(sum(r.ai_stars or 0 for r in visible) / max(1, len(visible)), 2)
-    src = [r.source_rating for r in visible if r.source_rating]
-    product.avg_rating = round(sum(src) / len(src), 2) if src else product.ai_rating
-    product.fake_review_ratio = round(sum(1 for r in reviews if r.is_hidden) / len(reviews), 3)
+    product.review_count = len(visible)
+    product.ai_rating = round(sum(r.ai_stars or r.rating for r in visible) / len(visible), 2) if visible else 0
+    product.fake_review_ratio = round(
+        sum(1 for r in reviews if r.fake_probability >= s.fake_hide_threshold) / len(reviews), 3) if reviews else 0
+    await combined_rating(db, product)
 
-    # Kronik sorunlar
-    mentions = [chronic.ComplaintMention(c["key"], c["label"], r.posted_at)
+    # Kronik sorunlar (zamana yayılmış tekrar eden şikayetler)
+    mentions = [chronic.ComplaintMention(c["key"], c["label"], r.created_at)
                 for r in visible for c in (r.complaints or [])]
     issues = chronic.detect(mentions, len(visible), s.chronic_min_share, s.chronic_min_months)
     await db.execute(delete(ChronicIssue).where(ChronicIssue.product_id == product_id))
@@ -95,7 +112,6 @@ async def analyze_reviews(db: AsyncSession, product_id: int) -> dict:
     return {"total": len(reviews), "hidden": len(reviews) - len(visible), "issues": len(issues)}
 
 
-_POS = ["mükemmel", "harika", "çok iyi", "memnun", "tavsiye", "süper", "kaliteli", "hızlı", "güzel"]
 _NEG = ["bozuk", "kötü", "pişman", "iade", "arıza", "berbat", "yavaş", "kırıldı", "ısınıyor", "çabuk bitiyor"]
 _COMPLAINT_LEXICON = {
     "overheating": ("ısın", "Aşırı ısınma"),
@@ -107,15 +123,9 @@ _COMPLAINT_LEXICON = {
 }
 
 
-def _lexicon_stars(text: str) -> float:
+def _lexicon_complaints(text: str, rating: float) -> list[dict]:
     t = text.lower()
-    score = 3 + sum(t.count(w) for w in _POS) * 0.7 - sum(t.count(w) for w in _NEG) * 0.9
-    return float(max(1, min(5, round(score))))
-
-
-def _lexicon_complaints(text: str) -> list[dict]:
-    t = text.lower()
-    if _lexicon_stars(text) >= 4:
+    if rating >= 4 and not any(w in t for w in _NEG):
         return []
     return [{"key": k, "label": lbl} for k, (needle, lbl) in _COMPLAINT_LEXICON.items() if needle in t]
 
@@ -136,7 +146,7 @@ async def rescore_category(db: AsyncSession, category_id: int) -> int:
         if sev == "high":
             high[pid] = high.get(pid, 0) + 1
     inputs = [scoring.ScoreInput(
-        id=p.id, price=p.current_price, rating=p.ai_rating or p.avg_rating or 3.5, rating_count=p.rating_count,
+        id=p.id, price=p.current_price, rating=p.avg_rating or p.ai_rating or 3.5, rating_count=p.rating_count,
         specs=p.specs or {}, durability=p.durability_score, chronic_high=high.get(p.id, 0),
         chronic_total=total.get(p.id, 0), fake_ratio=p.fake_review_ratio, is_chronic_free=p.is_chronic_free,
     ) for p in products]
@@ -230,32 +240,23 @@ async def upsert_found(db: AsyncSession, fp: FoundProduct) -> Product:
                          url=fp.url, affiliate_url=fp.affiliate_url))
         await db.flush()
         await record_price(db, existing)
+    if fp.rating and fp.rating_count:
+        await save_external_rating(db, existing, fp.rating_source or fp.source, fp.rating, fp.rating_count, fp.url)
     await db.commit()
     return existing
 
 
-async def ingest_reviews(db: AsyncSession, product: Product, limit: int = 150) -> int:
-    added = 0
-    brand = product.brand.name if product.brand else ""
-    for src in enabled_sources():
-        try:
-            found = await src.reviews(f"{brand} {product.name}".strip(), product.external_ids or {}, limit)
-        except Exception as e:  # noqa: BLE001  (bir kaynak düşse diğerleri devam eder)
-            log.warning("%s yorumları alınamadı: %s", src.name, e)
-            continue
-        for fr in found:
-            if not fr.text.strip():
-                continue
-            exists = await db.scalar(select(Review.id).where(
-                Review.product_id == product.id, Review.source == fr.source, Review.external_id == fr.external_id))
-            if exists:
-                continue
-            db.add(Review(product_id=product.id, source=fr.source, external_id=fr.external_id, author=fr.author,
-                          text=fr.text, source_rating=fr.rating, posted_at=fr.posted_at,
-                          content_hash=fake_reviews.content_hash(fr.text)))
-            added += 1
-    await db.commit()
-    return added
+async def save_external_rating(db: AsyncSession, product: Product, source: str, rating: float, count: int,
+                               url: str | None = None) -> None:
+    row = await db.scalar(select(ExternalRating).where(ExternalRating.product_id == product.id,
+                                                       ExternalRating.source == source))
+    if row:
+        row.rating, row.rating_count, row.url = float(rating), int(count), url
+    else:
+        db.add(ExternalRating(product_id=product.id, source=source, rating=float(rating),
+                              rating_count=int(count), url=url))
+    await db.flush()
+    await combined_rating(db, product)
 
 
 async def refresh_product(db: AsyncSession, product_id: int) -> dict:
@@ -268,14 +269,13 @@ async def refresh_product(db: AsyncSession, product_id: int) -> dict:
                 await upsert_found(db, fp)
         except Exception as e:  # noqa: BLE001
             log.warning("%s teklif alınamadı: %s", src.name, e)
-    added = await ingest_reviews(db, product)
     stats = await analyze_reviews(db, product_id)
     await rescore_category(db, product.category_id)
-    return {"new_reviews": added, **stats}
+    return stats
 
 
 async def discover(db: AsyncSession, query: str, limit: int = 5) -> list[Product]:
-    """Sistemde olmayan ürünleri lisanslı kaynaklarda arar, ekler ve analiz eder."""
+    """Sistemde olmayan ürünleri lisanslı kaynaklarda arar; ürün, fiyat ve puanını ekler."""
     created: list[Product] = []
     for src in enabled_sources():
         try:
@@ -289,7 +289,6 @@ async def discover(db: AsyncSession, query: str, limit: int = 5) -> list[Product
             seen.add(p.id)
             uniq.append(p)
     for p in uniq[:limit]:
-        await ingest_reviews(db, p)
         await analyze_reviews(db, p.id)
     for cid in {p.category_id for p in uniq}:
         await rescore_category(db, cid)

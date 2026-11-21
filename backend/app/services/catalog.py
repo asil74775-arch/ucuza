@@ -14,7 +14,7 @@ SORTS = {
     "cheapest": lambda p: p.current_price,
     "expensive": lambda p: -p.current_price,
     "fp": lambda p: -p.fp_score,
-    "rating": lambda p: -(p.ai_rating or p.avg_rating),
+    "rating": lambda p: -(p.avg_rating or p.ai_rating),
     "popular": lambda p: -p.rating_count,
 }
 
@@ -24,6 +24,7 @@ def card(p: Product, personal_score: float | None = None) -> dict:
         "id": p.id, "name": p.name, "brand": p.brand.name if p.brand else None,
         "category_id": p.category_id, "image": (p.images or [None])[0], "price": p.current_price,
         "currency": p.currency, "rating": p.avg_rating, "ai_rating": p.ai_rating, "rating_count": p.rating_count,
+        "review_count": p.review_count,
         "best_choice_score": p.best_choice_score, "fp_score": p.fp_score, "badges": p.badges or [],
         "is_chronic_free": p.is_chronic_free, "personal_score": personal_score,
         "ar_type": p.ar_type,
@@ -167,7 +168,8 @@ async def duel(db: AsyncSession, a: Product, b: Product) -> dict:
         rounds.append({"label": label, "a": va, "b": vb, "unit": unit, "winner": winner})
 
     add("Fiyat", a.current_price, b.current_price, False, " TL")
-    add("Yapay Zeka Puanı", a.ai_rating, b.ai_rating, True, "/5")
+    add("Genel Puan", a.avg_rating, b.avg_rating, True, "/5")
+    add("Kıyaslio Kullanıcı Puanı (AI)", a.ai_rating, b.ai_rating, True, "/5")
     add("Fiyat/Performans", a.fp_score, b.fp_score, True)
     add("Dayanıklılık", a.durability_score, b.durability_score, True)
     add("En İyi Seçim Puanı", a.best_choice_score, b.best_choice_score, True)

@@ -56,7 +56,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Deneyimini Paylaş')),
+      appBar: AppBar(title: const Text('Yorum Yaz')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           for (var i = 1; i <= 5; i++)
@@ -87,8 +87,9 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         const SizedBox(height: 8),
         FilledButton(onPressed: busy ? null : submit, child: const Text('Paylaş')),
         const SizedBox(height: 8),
-        const Text('Paylaşımın Keşfet akışında ve ürün sayfasındaki "Bizden Alanlar" bölümünde görünür. '
-            'Bağlantı, iletişim bilgisi ve hakaret içeren paylaşımlar kaldırılır.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        const Text('Yorumun Keşfet akışında ve ürün sayfasındaki "Bizden Alanlar" bölümünde görünür ve ürün puanına katılır. '
+            'Her ürüne bir yorum yazabilirsin. Sahte, kopyalanmış veya sponsorlu olduğu tespit edilen yorumlar ile '
+            'bağlantı, iletişim bilgisi ve hakaret içerenler kaldırılır.', style: TextStyle(fontSize: 12, color: Colors.grey)),
       ]),
     );
   }

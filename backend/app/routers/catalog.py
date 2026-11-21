@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..core.security import optional_user
 from ..db import SessionLocal, get_db
 from ..models import (
-    Brand, Category, Compatibility, Experience, Offer, PriceHistory, Product, RatingHistory, Review, User,
+    Brand, Category, Compatibility, Experience, ExternalRating, Offer, PriceHistory, Product, RatingHistory, User,
 )
 from ..services import catalog, matching, pipeline
 
@@ -93,13 +93,19 @@ async def product_detail(pid: int, db: AsyncSession = Depends(get_db)):
     cat = await db.get(Category, p.category_id)
     offers = (await db.scalars(select(Offer).where(Offer.product_id == pid).order_by(Offer.price))).all()
     issues = await catalog.chronic_list(db, pid)
-    hidden = await db.scalar(select(func.count()).select_from(Review).where(Review.product_id == pid, Review.is_hidden.is_(True)))
+    from ..config import get_settings
+    hidden = await db.scalar(select(func.count()).select_from(Experience).where(
+        Experience.product_id == pid, Experience.fake_probability >= get_settings().fake_hide_threshold))
+    ext = (await db.scalars(select(ExternalRating).where(ExternalRating.product_id == pid)
+                            .order_by(ExternalRating.rating_count.desc()))).all()
     exp_count = await db.scalar(select(func.count()).select_from(Experience).where(Experience.product_id == pid))
     return {
         **catalog.card(p), "description": p.description, "model_code": p.model_code, "images": p.images,
         "specs": p.specs, "spec_schema": cat.spec_schema, "category": cat_out(cat), "tags": p.tags,
         "score_breakdown": p.score_breakdown, "durability_score": p.durability_score,
         "fake_review_ratio": p.fake_review_ratio, "fake_reviews_removed": hidden,
+        "external_ratings": [{"source": e.source, "rating": e.rating, "rating_count": e.rating_count, "url": e.url,
+                              "fetched_at": e.fetched_at.isoformat()} for e in ext],
         "ar_model_url": p.ar_model_url, "tryon_asset_url": p.tryon_asset_url,
         "offers": [{"id": o.id, "seller": o.seller, "price": o.price, "url": o.affiliate_url or o.url,
                     "in_stock": o.in_stock, "source": o.source} for o in offers],
@@ -126,24 +132,9 @@ async def history(pid: int, days: int = 365, db: AsyncSession = Depends(get_db))
                          "count": h.count} for h in ratings]}
 
 
-@router.get("/products/{pid}/reviews")
-async def reviews(pid: int, include_hidden: bool = False, limit: int = 30, offset: int = 0,
-                  db: AsyncSession = Depends(get_db)):
-    stmt = select(Review).where(Review.product_id == pid)
-    if not include_hidden:
-        stmt = stmt.where(Review.is_hidden.is_(False))
-    rows = (await db.scalars(stmt.order_by(Review.posted_at.desc()).offset(offset).limit(limit))).all()
-    from ..config import get_settings
-    warn = get_settings().fake_warn_threshold
-    return [{"id": r.id, "source": r.source, "author": r.author, "text": r.text, "source_rating": r.source_rating,
-             "ai_stars": r.ai_stars, "sentiment": r.sentiment, "posted_at": r.posted_at.isoformat(),
-             "fake_probability": r.fake_probability, "fake_reasons": r.fake_reasons, "is_hidden": r.is_hidden,
-             "suspicious": r.fake_probability >= warn, "complaints": r.complaints} for r in rows]
-
-
 @router.post("/products/{pid}/refresh")
 async def refresh(pid: int, bg: BackgroundTasks):
-    """İnternetten yorum/teklif toplama + AI analizi başlatır (arka planda)."""
+    """Tekliflerden fiyat/puan güncelleme + kullanıcı yorumlarının AI analizi (arka planda)."""
     async def job():
         async with SessionLocal() as s:
             await pipeline.refresh_product(s, pid)

@@ -37,10 +37,12 @@ async def test_product_detail_history_reviews(client):
     d = (await client.get(f"/products/{pid}")).json()
     assert d["chronic_issues"] and "Yüksek Riskli" in d["badges"] and not d["is_chronic_free"]
     assert d["fake_reviews_removed"] > 0
+    assert d["external_ratings"] and all("text" not in e for e in d["external_ratings"])
+    assert d["rating_count"] == d["review_count"] + sum(e["rating_count"] for e in d["external_ratings"])
     h = (await client.get(f"/products/{pid}/history")).json()
     assert len(h["prices"]) > 10 and h["ratings"]
-    revs = (await client.get(f"/products/{pid}/reviews")).json()
-    assert all(not r["is_hidden"] for r in revs)
+    revs = (await client.get(f"/products/{pid}/experiences", params={"limit": 100})).json()
+    assert revs and len(revs) == d["review_count"]  # sahte yorumlar gösterilmez
 
 
 async def test_accessory_flow(client):
@@ -84,6 +86,8 @@ async def test_social_and_messages(client):
     pid = (await client.get("/products", params={"q": "Galaxy S24"})).json()[0]["id"]
     e = await client.post("/experiences", data={"product_id": pid, "text": "2 aydır kullanıyorum, çok memnunum", "rating": 5})
     assert e.status_code == 200
+    dup = await client.post("/experiences", data={"product_id": pid, "text": "ikinci yorum denemesi", "rating": 1})
+    assert dup.status_code == 409  # kullanıcı başına ürün başına tek yorum
     assert (await client.get("/explore")).json()
     assert (await client.get(f"/products/{pid}/experiences")).json()
     q = (await client.post(f"/products/{pid}/questions", json={"text": "Şarj süresi ne kadar?"})).json()

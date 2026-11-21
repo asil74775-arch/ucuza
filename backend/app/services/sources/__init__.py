@@ -1,8 +1,7 @@
 from .affiliate_feed import AffiliateFeed
 from .serpapi import SerpApiShopping
-from .youtube import YouTubeComments
 
-REGISTRY = [AffiliateFeed(), SerpApiShopping(), YouTubeComments()]
+REGISTRY = [AffiliateFeed(), SerpApiShopping()]
 
 
 def enabled_sources():

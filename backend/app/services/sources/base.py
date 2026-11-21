@@ -1,14 +1,12 @@
 """Kaynak adaptör arayüzü.
 
-Her adaptör LİSANSLI/RESMİ bir kaynağı temsil eder (affiliate feed, SerpAPI
-Google Shopping, YouTube Data API). Yeni pazar yeri eklemek = yeni bir
-SourceAdapter alt sınıfı yazıp REGISTRY'ye eklemek.
+Her adaptör LİSANSLI/RESMİ bir kaynağı temsil eder (affiliate feed, Google
+Shopping). Kaynaklardan YALNIZCA ürün, fiyat ve PUAN (ortalama + sayı) alınır;
+yorum metni toplanmaz. Yorumlar yalnızca Kıyaslio kullanıcılarından gelir.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
-
 
 @dataclass
 class FoundProduct:
@@ -26,16 +24,7 @@ class FoundProduct:
     rating_count: int | None = None
     seller: str | None = None
     affiliate_url: str | None = None
-
-
-@dataclass
-class FoundReview:
-    source: str
-    external_id: str
-    author: str
-    text: str
-    rating: float | None
-    posted_at: datetime
+    rating_source: str | None = None  # puanın ait olduğu platform adı (ör. "Trendyol")
 
 
 class SourceAdapter:
@@ -46,7 +35,4 @@ class SourceAdapter:
         return False
 
     async def search(self, query: str, limit: int = 10) -> list[FoundProduct]:
-        return []
-
-    async def reviews(self, product_name: str, external_ids: dict, limit: int = 100) -> list[FoundReview]:
         return []

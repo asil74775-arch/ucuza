@@ -19,7 +19,6 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-2.5-flash"
 
     serpapi_key: str | None = None
-    youtube_api_key: str | None = None
     affiliate_feed_urls: str = ""  # virgülle ayrılmış JSON feed URL'leri
 
     # Sahte yorum eşikleri
@@ -28,7 +27,7 @@ class Settings(BaseSettings):
     # Kronik sorun eşikleri
     chronic_min_share: float = 0.05
     chronic_min_months: int = 3
-    chronic_free_min_reviews: int = 20
+    chronic_free_min_reviews: int = 10  # uygulama içi yorum sayısı eşiği
 
 
 @lru_cache

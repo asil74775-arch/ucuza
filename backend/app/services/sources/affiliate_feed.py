@@ -2,7 +2,8 @@
 
 Affiliate ağları (ör. pazar yeri ortaklık programları) ürün feed'lerini
 JSON olarak sunar. Beklenen biçim:
-[{"id","name","brand","price","url","affiliate_url","images":[],"specs":{},"category","seller"}]
+[{"id","name","brand","price","url","affiliate_url","images":[],"specs":{},"category","seller",
+  "rating": 4.6, "rating_count": 1520}]   # puan alanları isteğe bağlı
 """
 from __future__ import annotations
 
@@ -49,7 +50,8 @@ class AffiliateFeed(SourceAdapter):
                         source=self.name, external_id=str(it["id"]), name=it["name"], brand=it.get("brand"),
                         price=float(it["price"]), url=it["url"], images=it.get("images", []),
                         specs=it.get("specs", {}), category_hint=it.get("category"), seller=it.get("seller"),
-                        affiliate_url=it.get("affiliate_url")))
+                        affiliate_url=it.get("affiliate_url"), rating=it.get("rating"),
+                        rating_count=it.get("rating_count"), rating_source=it.get("seller")))
                     if len(out) >= limit:
                         return out
         return out

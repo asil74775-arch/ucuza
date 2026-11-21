@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,8 +28,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     return Future.wait([
       api.get('/products/${widget.id}'),
       api.get('/products/${widget.id}/history'),
-      api.get('/products/${widget.id}/reviews', {'limit': 20}),
-      api.get('/products/${widget.id}/experiences', {'limit': 6}),
+      api.get('/products/${widget.id}/experiences', {'limit': 10}),
     ]);
   }
 
@@ -49,8 +47,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
         builder: (d) {
           final p = Map<String, dynamic>.from(d[0]);
           final hist = Map<String, dynamic>.from(d[1]);
-          final reviews = List<Map<String, dynamic>>.from((d[2] as List).map((e) => Map<String, dynamic>.from(e)));
-          final exps = List<Map<String, dynamic>>.from((d[3] as List).map((e) => Map<String, dynamic>.from(e)));
+          final exps = List<Map<String, dynamic>>.from((d[2] as List).map((e) => Map<String, dynamic>.from(e)));
           return Stack(children: [
             CustomScrollView(slivers: [
               SliverAppBar(
@@ -72,17 +69,18 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                 delegate: SliverChildListDelegate([
                   _Header(p),
                   _ActionGrid(p),
+                  _PlatformRatings(p),
                   _ScoreBreakdown(p),
                   _OffersSection(p),
                   _SpecsSection(p),
                   _PriceSection(p, hist),
                   _RatingSection(hist),
                   _ChronicSection(p),
-                  _ReviewsSection(p, reviews),
-                  SectionTitle('Bizden Alanlar (${p['experience_count']})', icon: Icons.people,
-                      action: 'Paylaş', onAction: () => context.push('/product/${p['id']}/share')),
+                  SectionTitle('Bizden Alanlar — Kullanıcı Yorumları (${p['review_count'] ?? 0})', icon: Icons.people,
+                      action: 'Yorum yaz', onAction: () => context.push('/product/${p['id']}/share')),
+                  _FakeWarning(p),
                   if (exps.isEmpty)
-                    const Padding(padding: EdgeInsets.all(16), child: Text('Henüz deneyim paylaşılmadı. İlk sen paylaş!'))
+                    const Padding(padding: EdgeInsets.all(16), child: Text('Henüz yorum yok. Ürünü kullandıysan ilk yorumu sen yaz!'))
                   else
                     for (final e in exps) ExperienceCard(e, compact: true),
                   ListTile(
@@ -187,9 +185,12 @@ class _Header extends StatelessWidget {
         if (p['model_code'] != null) Text('Model: ${p['model_code']}', style: const TextStyle(color: Colors.grey)),
         const SizedBox(height: 8),
         Row(children: [
-          Stars((p['ai_rating'] ?? 0).toDouble(), size: 18, count: p['rating_count']),
+          Stars((p['rating'] ?? 0).toDouble(), size: 18, count: p['rating_count']),
           const SizedBox(width: 6),
-          const Tooltip(message: 'Yapay zekanın yorum metinlerinden hesapladığı yıldız', child: Icon(Icons.auto_awesome, size: 16)),
+          const Tooltip(
+            message: 'Platform puanları ve Kıyaslio kullanıcı yorumlarının, puan sayısına göre ağırlıklı ortalaması',
+            child: Icon(Icons.info_outline, size: 16),
+          ),
           const Spacer(),
           ScorePill((p['best_choice_score'] ?? 0).toDouble()),
         ]),
@@ -437,56 +438,61 @@ class _ChronicSection extends StatelessWidget {
   }
 }
 
-class _ReviewsSection extends StatelessWidget {
-  const _ReviewsSection(this.p, this.reviews);
+/// Dış platformlardan alınan YALNIZCA puan ve puan sayısı + Kıyaslio kullanıcı puanı.
+class _PlatformRatings extends StatelessWidget {
+  const _PlatformRatings(this.p);
   final Map<String, dynamic> p;
-  final List<Map<String, dynamic>> reviews;
+  @override
+  Widget build(BuildContext context) {
+    final ext = List<Map>.from(p['external_ratings'] ?? const []);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const SectionTitle('Platform Puanları', icon: Icons.star_rate),
+      Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(children: [
+          for (final e in ext)
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.storefront),
+              title: Text(e['source']),
+              trailing: Stars((e['rating'] as num).toDouble(), size: 13, count: e['rating_count']),
+            ),
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.verified_user),
+            title: const Text('Kıyaslio kullanıcıları'),
+            subtitle: const Text('Yapay zeka ile analiz edilmiş, sahte yorumlar hariç'),
+            trailing: (p['review_count'] ?? 0) > 0
+                ? Stars((p['ai_rating'] ?? 0).toDouble(), size: 13, count: p['review_count'])
+                : const Text('Henüz yok'),
+          ),
+        ]),
+      ),
+      const Padding(
+        padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
+        child: Text('Diğer platformlardan yalnızca puan ortalaması ve puan sayısı alınır; yorumlar Kıyaslio kullanıcılarına aittir.',
+            style: TextStyle(fontSize: 11, color: Colors.grey)),
+      ),
+    ]);
+  }
+}
+
+class _FakeWarning extends StatelessWidget {
+  const _FakeWarning(this.p);
+  final Map<String, dynamic> p;
   @override
   Widget build(BuildContext context) {
     final removed = p['fake_reviews_removed'] ?? 0;
-    final fmt = DateFormat('d MMM y', 'tr_TR');
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const SectionTitle('İnternetten Toplanan Yorumlar', icon: Icons.reviews),
-      if (removed > 0)
-        Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          color: AppColors.wait.withValues(alpha: .12),
-          child: ListTile(
-            leading: const Icon(Icons.gpp_maybe, color: AppColors.wait),
-            title: Text('Sahte Yorum Dedektörü $removed yorumu kaldırdı'),
-            subtitle: Text('Kopyalanmış, sponsorlu veya bot olma ihtimali yüksek yorumlar puana dahil edilmedi. '
-                'Sahte yorum oranı: %${(((p['fake_review_ratio'] ?? 0) as num) * 100).toStringAsFixed(0)}'),
-          ),
-        ),
-      for (final r in reviews)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Stars((r['ai_stars'] ?? 0).toDouble(), size: 13),
-              const SizedBox(width: 6),
-              const Icon(Icons.auto_awesome, size: 12, color: Colors.grey),
-              const Spacer(),
-              Text('${r['source']} · ${fmt.format(DateTime.parse(r['posted_at']))}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            ]),
-            if (r['suspicious'] == true)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Row(children: [
-                  const Icon(Icons.flag, size: 14, color: AppColors.wait),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text('Şüpheli: ${(List.from(r['fake_reasons'] ?? const [])).join(', ')}',
-                        style: const TextStyle(fontSize: 11, color: AppColors.wait)),
-                  ),
-                ]),
-              ),
-            const SizedBox(height: 4),
-            Text(r['text']),
-            const Divider(),
-          ]),
-        ),
-    ]);
+    if (removed == 0) return const SizedBox.shrink();
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: AppColors.wait.withValues(alpha: .12),
+      child: ListTile(
+        leading: const Icon(Icons.gpp_maybe, color: AppColors.wait),
+        title: Text('Sahte Yorum Dedektörü $removed yorumu kaldırdı'),
+        subtitle: const Text('Kopyalanmış, sponsorlu veya bot olma ihtimali yüksek yorumlar gösterilmez ve puana dahil edilmez.'),
+      ),
+    );
   }
 }
 

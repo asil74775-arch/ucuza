@@ -1,15 +1,17 @@
-"""Gerçek Kullanıcı Deneyimi akışı, Topluluk Soru-Cevap, şikayet/engelleme."""
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+"""Kıyaslio kullanıcı yorumları (Keşfet + Bizden Alanlar), Topluluk Soru-Cevap, şikayet/engelleme.
+Uygulamadaki tek yorum kaynağı budur; dış platformlardan yorum metni alınmaz."""
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.security import current_user, optional_user
-from ..db import get_db
+from ..config import get_settings
+from ..db import SessionLocal, get_db
 from ..models import (
     Answer, Block, Experience, ExperienceLike, Ownership, Product, Question, Report, User,
 )
-from ..services import storage
+from ..services import fake_reviews, pipeline, storage
 from ..services.realtime import hub
 
 router = APIRouter(tags=["social"])
@@ -29,8 +31,19 @@ async def blocked_ids(db, user: User | None) -> set[int]:
     return set((await db.scalars(select(Block.blocked_id).where(Block.blocker_id == user.id))).all())
 
 
+async def reanalyze(product_id: int) -> None:
+    """Yeni/silinen yorumdan sonra: AI analizi, sahte yorum tespiti, kronik sorunlar, puan ve rozetler."""
+    async with SessionLocal() as db:
+        p = await db.get(Product, product_id)
+        if p:
+            await pipeline.analyze_reviews(db, product_id)
+            await pipeline.rescore_category(db, p.category_id)
+
+
 def exp_out(e: Experience, liked: bool = False) -> dict:
     return {"id": e.id, "text": e.text, "rating": e.rating, "media": e.media, "verified_purchase": e.verified_purchase,
+            "ai_stars": e.ai_stars, "complaints": e.complaints or [],
+            "suspicious": e.fake_probability >= get_settings().fake_warn_threshold, "fake_reasons": e.fake_reasons or [],
             "like_count": e.like_count, "liked": liked, "created_at": e.created_at.isoformat(),
             "user": {"id": e.user.id, "name": e.user.display_name, "avatar": e.user.avatar_url},
             "product": {"id": e.product.id, "name": e.product.name, "image": (e.product.images or [None])[0]}}
@@ -38,6 +51,7 @@ def exp_out(e: Experience, liked: bool = False) -> dict:
 
 @router.post("/experiences")
 async def create_experience(
+    bg: BackgroundTasks,
     product_id: int = Form(...), text: str = Form(..., max_length=1000), rating: int = Form(..., ge=1, le=5),
     files: list[UploadFile] = File(default=[]), user: User = Depends(current_user), db: AsyncSession = Depends(get_db),
 ):
@@ -45,6 +59,8 @@ async def create_experience(
         raise HTTPException(400, "En fazla 6 medya")
     if not await db.get(Product, product_id):
         raise HTTPException(404)
+    if await db.scalar(select(Experience.id).where(Experience.user_id == user.id, Experience.product_id == product_id)):
+        raise HTTPException(409, "Bu ürüne zaten yorum yaptınız. Mevcut yorumunuzu silip yeniden yazabilirsiniz.")
     media = []
     for f in files:
         _, url, kind = await storage.save_upload(f, "experiences")
@@ -52,11 +68,13 @@ async def create_experience(
     owner = await db.get(Ownership, (user.id, product_id))
     if not owner:
         db.add(Ownership(user_id=user.id, product_id=product_id))
-    e = Experience(user_id=user.id, product_id=product_id, text=clean(text), rating=rating, media=media,
-                   verified_purchase=bool(owner and owner.verified))
+    body = clean(text)
+    e = Experience(user_id=user.id, product_id=product_id, text=body, rating=rating, media=media,
+                   verified_purchase=bool(owner and owner.verified), content_hash=fake_reviews.content_hash(body))
     db.add(e)
     await db.commit()
     await db.refresh(e)
+    bg.add_task(reanalyze, product_id)
     return exp_out(e)
 
 
@@ -102,12 +120,15 @@ async def like(eid: int, user: User = Depends(current_user), db: AsyncSession = 
 
 
 @router.delete("/experiences/{eid}")
-async def delete_experience(eid: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+async def delete_experience(eid: int, bg: BackgroundTasks, user: User = Depends(current_user),
+                            db: AsyncSession = Depends(get_db)):
     e = await db.get(Experience, eid)
     if not e or e.user_id != user.id:
         raise HTTPException(404)
+    pid = e.product_id
     await db.delete(e)
     await db.commit()
+    bg.add_task(reanalyze, pid)
     return {"ok": True}
 
 

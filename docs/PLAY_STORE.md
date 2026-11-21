@@ -14,7 +14,7 @@
 ## 2. Mağaza girişi (öneri metinleri)
 - **Ad:** Kıyaslio: Akıllı Alışveriş & Fiyat Analizi
 - **Kısa açıklama (80):** Yapay zeka ile sahte yorumları ayıkla, kronik sorunları gör, en iyi ürünü seç.
-- **Uzun açıklama — ana başlıklar:** En İyi Seçim puanı · Sahte Yorum Dedektörü · Kronik Sorunlar & Kroniksiz etiketi · Fiyat ve puan geçmişi · Satın Almalı Mıyım? · Alışveriş Görevi · Proje Asistanı · Karşılaştırma Düellosu · Video ile ürün analizi · AR ile odanda gör / üzerinde dene · Uyumlu aksesuar bulucu · Keşfet & Soru-Cevap · Mesajlaşma
+- **Uzun açıklama — ana başlıklar:** Platform puanları tek ekranda · Gerçek kullanıcı yorumları · En İyi Seçim puanı · Sahte Yorum Dedektörü · Kronik Sorunlar & Kroniksiz etiketi · Fiyat ve puan geçmişi · Satın Almalı Mıyım? · Alışveriş Görevi · Proje Asistanı · Karşılaştırma Düellosu · Video ile ürün analizi · AR ile odanda gör / üzerinde dene · Uyumlu aksesuar bulucu · Keşfet & Soru-Cevap · Mesajlaşma
 - **Kategori:** Alışveriş · **Ekran görüntüleri:** telefon için en az 2 (öneri 8): ana sayfa, ürün detay (kronik + rozet), sahte yorum uyarısı, düello, satın almalı mıyım kararı, AR, keşfet, aksesuar bulucu.
 
 ## 3. Politika uyumu (kodda karşılığı olanlar)
@@ -27,7 +27,7 @@
 | Affiliate şeffaflığı | Profil ekranında bilgilendirme; mağaza açıklamasına da ekleyin |
 | İzinler | Yalnızca İnternet, Kamera, Mikrofon (video kaydı). Galeri için Photo Picker → depolama izni yok. AR/kamera `required=false`. |
 | Yapay zeka üretimi içerik | AI yanıtları kullanıcıya "yapay zeka" ikonuyla belirtilir; kullanıcılar içerik şikayet edebilir (Play AI-generated content politikası). |
-| Yorumları "kaldırma" | Sahte olasılığı yüksek yorumlar Kıyaslio içinde gösterilmez/puana dahil edilmez; kaynak sitedeki yorum silinmez. Mağaza açıklamasında bu şekilde ifade edin. |
+| Yorumlar ve puanlar | Yorumlar yalnızca Kıyaslio kullanıcılarına aittir; diğer platformlardan yalnızca puan ortalaması ve sayısı, kaynak adıyla gösterilir. Sahte olasılığı yüksek kullanıcı yorumları gizlenir. |
 
 ## 4. Veri güvenliği formu (Data safety) — önerilen yanıtlar
 | Veri türü | Toplanır | Paylaşılır | Amaç | Zorunlu |

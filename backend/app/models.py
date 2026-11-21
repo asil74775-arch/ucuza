@@ -113,9 +113,13 @@ class Product(Base):
     current_price: Mapped[float] = mapped_column(Float, default=0)
     currency: Mapped[str] = mapped_column(String(3), default="TRY")
     # AI ve skor alanları (pipeline tarafından güncellenir)
+    # avg_rating: dış platform + uygulama içi puanların sayıya göre ağırlıklı ortalaması
     avg_rating: Mapped[float] = mapped_column(Float, default=0)
+    external_rating_count: Mapped[int] = mapped_column(Integer, default=0)
+    # ai_rating: Kıyaslio kullanıcı yorumlarının yapay zeka yıldızı (sahte yorumlar hariç)
     ai_rating: Mapped[float] = mapped_column(Float, default=0)
-    rating_count: Mapped[int] = mapped_column(Integer, default=0)
+    rating_count: Mapped[int] = mapped_column(Integer, default=0)  # toplam puan sayısı (dış + iç)
+    review_count: Mapped[int] = mapped_column(Integer, default=0)  # görünür uygulama içi yorum sayısı
     popularity: Mapped[float] = mapped_column(Float, default=0)
     durability_score: Mapped[float] = mapped_column(Float, default=0.5)
     fp_score: Mapped[float] = mapped_column(Float, default=0)
@@ -168,26 +172,17 @@ class RatingHistory(Base):
     __table_args__ = (Index("ix_rating_hist_prod_time", "product_id", "recorded_at"),)
 
 
-class Review(Base):
-    """İnternetten toplanan yorum + yapay zeka analizi."""
-    __tablename__ = "reviews"
+class ExternalRating(Base):
+    """Dış platformlardaki YALNIZCA puan ve puan sayısı (yorum metni toplanmaz)."""
+    __tablename__ = "external_ratings"
     id: Mapped[int] = mapped_column(primary_key=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
-    source: Mapped[str] = mapped_column(String(40))
-    external_id: Mapped[str | None] = mapped_column(String(200))
-    author: Mapped[str] = mapped_column(String(120), default="Anonim")
-    text: Mapped[str] = mapped_column(Text)
-    source_rating: Mapped[float | None] = mapped_column(Float)
-    ai_stars: Mapped[float | None] = mapped_column(Float)
-    sentiment: Mapped[str | None] = mapped_column(String(10))
-    complaints: Mapped[list] = mapped_column(JsonType, default=list)  # [{key,label}]
-    fake_probability: Mapped[float] = mapped_column(Float, default=0)
-    fake_reasons: Mapped[list] = mapped_column(JsonType, default=list)
-    is_hidden: Mapped[bool] = mapped_column(Boolean, default=False)
-    analyzed: Mapped[bool] = mapped_column(Boolean, default=False)
-    content_hash: Mapped[str] = mapped_column(String(64), index=True)
-    posted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    __table_args__ = (UniqueConstraint("product_id", "source", "external_id", name="uq_review_src"),)
+    source: Mapped[str] = mapped_column(String(60))  # ör. "Trendyol", "Hepsiburada", "Google Shopping"
+    rating: Mapped[float] = mapped_column(Float)  # 1-5
+    rating_count: Mapped[int] = mapped_column(Integer, default=0)
+    url: Mapped[str | None] = mapped_column(String(1000))
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    __table_args__ = (UniqueConstraint("product_id", "source", name="uq_ext_rating_src"),)
 
 
 class ChronicIssue(Base):
@@ -286,7 +281,8 @@ class VideoJob(Base):
 
 # ---------------------------------------------------------------- Topluluk
 class Experience(Base):
-    """Gerçek Kullanıcı Deneyimi (Keşfet + Bizden Alanlar)."""
+    """Kıyaslio kullanıcı yorumu = Gerçek Kullanıcı Deneyimi (Keşfet + Bizden Alanlar).
+    Uygulamadaki TEK yorum kaynağıdır; yapay zeka analizi bu kayıtlar üzerinde çalışır."""
     __tablename__ = "experiences"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
@@ -296,10 +292,20 @@ class Experience(Base):
     media: Mapped[list] = mapped_column(JsonType, default=list)  # [{type: image|video, url}]
     verified_purchase: Mapped[bool] = mapped_column(Boolean, default=False)
     like_count: Mapped[int] = mapped_column(Integer, default=0)
-    is_hidden: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_hidden: Mapped[bool] = mapped_column(Boolean, default=False)  # şikayet/moderasyon veya sahte
+    # Yapay zeka analizi
+    ai_stars: Mapped[float | None] = mapped_column(Float)
+    sentiment: Mapped[str | None] = mapped_column(String(10))
+    complaints: Mapped[list] = mapped_column(JsonType, default=list)  # [{key,label}]
+    fake_probability: Mapped[float] = mapped_column(Float, default=0)
+    fake_reasons: Mapped[list] = mapped_column(JsonType, default=list)
+    analyzed: Mapped[bool] = mapped_column(Boolean, default=False)
+    content_hash: Mapped[str] = mapped_column(String(64), default="", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     user: Mapped[User] = relationship(lazy="joined")
     product: Mapped[Product] = relationship(lazy="joined")
+    # Kullanıcı başına ürün başına tek yorum (puan şişirmeyi önler)
+    __table_args__ = (UniqueConstraint("user_id", "product_id", name="uq_experience_user_product"),)
 
 
 class ExperienceLike(Base):

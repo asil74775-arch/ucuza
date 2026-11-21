@@ -11,7 +11,7 @@ import logging
 from sqlalchemy import func, or_, select
 
 from ..db import SessionLocal
-from ..models import Brand, Product, Review, User, VideoJob
+from ..models import Brand, Experience, Product, User, VideoJob
 from . import assistant, catalog, pipeline
 from .gemini import GeminiError, gemini
 
@@ -80,12 +80,12 @@ async def process(job_id: int) -> None:
                 await db.commit()
                 return
             job.product_id = product.id
-            job.stage = "Yorumlar, sahte yorumlar ve fiyat geçmişi inceleniyor"
+            job.stage = "Puanlar, kullanıcı yorumları ve fiyat geçmişi inceleniyor"
             await db.commit()
             await pipeline.refresh_product(db, product.id)
             await db.refresh(product)
-            hidden = await db.scalar(select(func.count()).select_from(Review).where(
-                Review.product_id == product.id, Review.is_hidden.is_(True)))
+            hidden = await db.scalar(select(func.count()).select_from(Experience).where(
+                Experience.product_id == product.id, Experience.fake_probability >= 0.7))
             verdict = await assistant.should_buy(db, user, product, None,
                                                  "Videoda gördüğüm ürün almaya değer mi?")
             job.status, job.stage = "done", "Tamamlandı"

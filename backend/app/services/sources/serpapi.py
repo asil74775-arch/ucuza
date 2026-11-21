@@ -1,12 +1,10 @@
-"""SerpAPI Google Shopping (lisanslı arama API'si) adaptörü — ürün, fiyat ve yorumlar."""
+"""SerpAPI Google Shopping adaptörü — ürün, fiyat ve PUAN (yorum metni alınmaz)."""
 from __future__ import annotations
-
-from datetime import datetime, timezone
 
 import httpx
 
 from ...config import get_settings
-from .base import FoundProduct, FoundReview, SourceAdapter
+from .base import FoundProduct, SourceAdapter
 
 URL = "https://serpapi.com/search.json"
 
@@ -44,25 +42,6 @@ class SerpApiShopping(SourceAdapter):
                 name=it.get("title", ""), brand=None, price=it.get("extracted_price") or _price(it.get("price")),
                 url=it.get("product_link") or it.get("link", ""), images=[i for i in [it.get("thumbnail")] if i],
                 rating=it.get("rating"), rating_count=it.get("reviews"), seller=it.get("source"),
+                rating_source=it.get("source") or "Google Shopping",
             ))
-        return out
-
-    async def reviews(self, product_name: str, external_ids: dict, limit: int = 100) -> list[FoundReview]:
-        pid = external_ids.get(self.name)
-        if not pid:
-            return []
-        params = {"engine": "google_product", "product_id": pid, "reviews": "1", "gl": "tr", "hl": "tr",
-                  "api_key": get_settings().serpapi_key}
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get(URL, params=params)
-            r.raise_for_status()
-            data = r.json()
-        out = []
-        for i, rv in enumerate(data.get("reviews_results", {}).get("reviews", [])[:limit]):
-            try:
-                dt = datetime.strptime(rv.get("date", ""), "%B %d, %Y").replace(tzinfo=timezone.utc)
-            except ValueError:
-                dt = datetime.now(timezone.utc)
-            out.append(FoundReview(self.name, f"{pid}-{i}", rv.get("source", "Anonim"),
-                                   rv.get("content", ""), rv.get("rating"), dt))
         return out

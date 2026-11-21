@@ -15,7 +15,8 @@ from urllib.parse import quote
 from sqlalchemy import select
 
 from app.db import SessionLocal, init_models
-from app.models import Brand, Category, PriceHistory, Product, Review
+from app.core.security import hash_password
+from app.models import Brand, Category, Experience, ExternalRating, PriceHistory, Product, User
 from app.services import fake_reviews, pipeline
 
 N = lambda key, label, unit="", hib=True, w=1: {"key": key, "label": label, "unit": unit, "type": "number",  # noqa: E731
@@ -175,14 +176,24 @@ async def seed(demo: bool = True) -> None:
             return
 
         now = datetime.now(timezone.utc)
+        # Demo kullanıcılar (yorumlar yalnızca Kıyaslio kullanıcılarından gelir)
+        pw = hash_password("demo-kullanici-sifre")
+        users = []
+        for i in range(90):
+            u = User(email=f"demo{i}@kiyaslio.local", password_hash=pw, display_name=f"Demo Kullanıcı {i + 1}")
+            db.add(u)
+            users.append(u)
+        await db.flush()
+
         brands: dict[str, Brand] = {}
+        platforms = ["Trendyol", "Hepsiburada", "Amazon TR", "N11"]
         for slug, brand, name, model, price, specs, tags, ar, quality, cprof in PRODUCTS:
             if brand not in brands:
                 brands[brand] = Brand(name=brand)
                 db.add(brands[brand])
                 await db.flush()
             p = Product(category_id=cats[slug].id, brand_id=brands[brand].id, name=f"{brand} {name}", model_code=model,
-                        description=f"{brand} {name} — teknik özellikler, kullanıcı yorumları ve yapay zeka analizi ile.",
+                        description=f"{brand} {name} — teknik özellikler, platform puanları ve Kıyaslio kullanıcı yorumları.",
                         specs=specs, images=img(f"{brand} {model}"), tags=tags, current_price=price, ar_type=ar,
                         ar_model_url=(f"https://modelviewer.dev/shared-assets/models/"
                                       f"{'Chair' if ar == 'furniture' else 'Astronaut'}.glb") if ar else None,
@@ -194,15 +205,22 @@ async def seed(demo: bool = True) -> None:
             for d in range(360, -1, -15):
                 drift = 1 + 0.12 * (d / 360) + rnd.uniform(-0.04, 0.04)
                 db.add(PriceHistory(product_id=p.id, price=round(price * drift, -1), recorded_at=now - timedelta(days=d)))
-            # Yorumlar (gerçekçi dağılım + kronik şikayet + sahte yorumlar)
-            n = rnd.randint(30, 80)
+            # Dış platform puanları: YALNIZCA ortalama + puan sayısı
+            for plat in rnd.sample(platforms, 2):
+                db.add(ExternalRating(product_id=p.id, source=plat,
+                                      rating=round(min(5, max(1, 1 + 4 * quality + rnd.uniform(-.3, .3))), 1),
+                                      rating_count=rnd.randint(50, 5000)))
+            # Kıyaslio kullanıcı yorumları (kullanıcı başına tek yorum)
+            pool = rnd.sample(users, len(users))
+            n = rnd.randint(25, 60)
             for i in range(n):
                 posted = now - timedelta(days=rnd.randint(1, 360))
                 r = rnd.random()
-                text, stars = None, None
+                text, stars, comp = None, None, []
                 for key, share in cprof.items():
                     if r < share:
                         text, stars = COMPLAINTS[key][1], rnd.choice([1, 2, 2, 3])
+                        comp = [{"key": key, "label": COMPLAINTS[key][0]}]
                         break
                     r -= share
                 if text is None:
@@ -210,24 +228,18 @@ async def seed(demo: bool = True) -> None:
                         text, stars = rnd.choice(POS_TEXTS), rnd.choice([4, 5, 5])
                     else:
                         text, stars = rnd.choice(NEU_TEXTS), rnd.choice([2, 3, 3])
-                db.add(Review(product_id=p.id, source="demo", external_id=f"{p.id}-{i}", author=f"Kullanıcı{rnd.randint(1, 9999)}",
-                              text=text, source_rating=stars, posted_at=posted, content_hash=fake_reviews.content_hash(text)))
-            fake_n = 2 if quality > .5 else 12
+                db.add(Experience(user_id=pool[i].id, product_id=p.id, text=text, rating=stars, complaints=comp,
+                                  created_at=posted, content_hash=fake_reviews.content_hash(text)))
+            # Sahte yorum denemeleri (aynı gün, kopya/sponsorlu metin) -> dedektör gizlemeli
+            fake_n = 2 if quality > .5 else 10
             for j in range(fake_n):
                 t = rnd.choice(FAKE_TEXTS)
-                db.add(Review(product_id=p.id, source="demo", external_id=f"{p.id}-f{j}", author="mutlu_musteri",
-                              text=t, source_rating=5, posted_at=now - timedelta(days=3), content_hash=fake_reviews.content_hash(t)))
+                db.add(Experience(user_id=pool[n + j].id, product_id=p.id, text=t, rating=5,
+                                  created_at=now - timedelta(days=3), content_hash=fake_reviews.content_hash(t)))
         await db.commit()
 
         products = (await db.scalars(select(Product))).unique().all()
         for p in products:
-            # Demo şikayet anahtarlarını AI olmadan da tanınır kıl
-            reviews = (await db.scalars(select(Review).where(Review.product_id == p.id))).all()
-            for rv in reviews:
-                for key, (label, txt) in COMPLAINTS.items():
-                    if rv.text == txt:
-                        rv.complaints = [{"key": key, "label": label}]
-            await db.commit()
             await pipeline.analyze_reviews(db, p.id)
         for c in cats.values():
             await pipeline.rescore_category(db, c.id)

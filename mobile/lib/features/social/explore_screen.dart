@@ -130,6 +130,18 @@ class _ExperienceCardState extends ConsumerState<ExperienceCard> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Stars((e['rating'] as num).toDouble()),
+            if (e['suspicious'] == true)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(children: [
+                  const Icon(Icons.flag, size: 14, color: Colors.orange),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text('Şüpheli yorum: ${List.from(e['fake_reasons'] ?? const []).join(', ')}',
+                        style: const TextStyle(fontSize: 11, color: Colors.orange)),
+                  ),
+                ]),
+              ),
             const SizedBox(height: 4),
             Text(e['text']),
           ]),
