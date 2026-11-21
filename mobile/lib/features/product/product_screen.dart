@@ -334,7 +334,28 @@ class _OffersSection extends StatelessWidget {
       for (final o in offers)
         ListTile(
           leading: const Icon(Icons.store),
-          title: Text(o['seller']),
+          title: Row(children: [
+            Expanded(child: Text(o['seller'])),
+            const SizedBox(width: 6),
+            if (o['trusted'] == true)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCF5E9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('Güvenilir', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF0A7A3A))),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE8E9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('Onaylanmadı', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFA01010))),
+              ),
+          ]),
           subtitle: Text(o['in_stock'] ? 'Stokta' : 'Stokta yok'),
           trailing: Text(tl(o['price']), style: const TextStyle(fontWeight: FontWeight.w800)),
           onTap: () => launchUrl(Uri.parse(o['url']), mode: LaunchMode.externalApplication),

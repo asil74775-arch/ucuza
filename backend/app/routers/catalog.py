@@ -1,6 +1,14 @@
 import json
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+
+# Resmi affiliate anlaşması ve müşteri güvencesi olan platformlar
+_TRUSTED_SOURCES = {
+    "trendyol", "amazon", "hepsiburada", "n11", "gittigidiyor",
+    "ciceksepeti", "boyner", "morhipo", "koton", "lcwaikiki",
+    "mediamarkt", "teknosa", "vatan", "bimeks",
+}
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -110,7 +118,8 @@ async def product_detail(pid: int, db: AsyncSession = Depends(get_db)):
                               "fetched_at": e.fetched_at.isoformat()} for e in ext],
         "ar_model_url": p.ar_model_url, "tryon_asset_url": p.tryon_asset_url,
         "offers": [{"id": o.id, "seller": o.seller, "price": o.price, "url": o.affiliate_url or o.url,
-                    "in_stock": o.in_stock, "source": o.source} for o in offers],
+                    "in_stock": o.in_stock, "source": o.source,
+                    "trusted": o.source.lower() in _TRUSTED_SOURCES} for o in offers],
         "chronic_issues": [{"title": i.title, "severity": i.severity, "share": i.share,
                             "mention_count": i.mention_count, "months_active": i.months_active,
                             "is_chronic": i.is_chronic, "timeline": i.timeline} for i in issues if i.is_chronic],
