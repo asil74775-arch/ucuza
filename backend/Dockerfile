@@ -7,4 +7,4 @@ COPY . .
 RUN useradd -m app && mkdir -p /data/media && chown -R app /data /app
 USER app
 EXPOSE 8000
-CMD ["sh", "-c", "python -m scripts.seed --no-demo && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers"]
+CMD ["sh", "-c", "if [ \"$SEED_DEMO\" = true ]; then python -m scripts.seed; else python -m scripts.seed --no-demo; fi && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers"]

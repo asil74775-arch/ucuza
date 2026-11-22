@@ -15,11 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-<<<<<<< HEAD
     namespace = "com.fiyatradar.app"
-=======
-    namespace = "com.dengi.app"
->>>>>>> ucuza/main
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -29,11 +25,7 @@ android {
     }
 
     defaultConfig {
-<<<<<<< HEAD
         applicationId = "com.fiyatradar.app"
-=======
-        applicationId = "com.dengi.app"
->>>>>>> ucuza/main
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24 // ML Kit, CameraX ve ARCore (Scene Viewer) için

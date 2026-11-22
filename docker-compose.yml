@@ -1,40 +1,53 @@
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-<<<<<<< HEAD
       POSTGRES_USER: fiyatradar
-      POSTGRES_PASSWORD: fiyatradar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fiyatradar}
       POSTGRES_DB: fiyatradar
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U fiyatradar"]
-=======
-      POSTGRES_USER: dengi
-      POSTGRES_PASSWORD: dengi
-      POSTGRES_DB: dengi
-    volumes: [pgdata:/var/lib/postgresql/data]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dengi"]
->>>>>>> ucuza/main
       interval: 5s
       retries: 10
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
   api:
     build: ./backend
+    restart: unless-stopped
     env_file: ./backend/.env
     depends_on:
       db: {condition: service_healthy}
       redis: {condition: service_started}
-    ports: ["8000:8000"]
+    expose: ["8000"]
     volumes: [media:/data/media]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      retries: 60
   # Günlük yorum/fiyat yenileme (fiyat geçmişi, puan geçmişi, kronik sorun güncellemesi)
+  # Tablolar API tarafından oluşturulur; eşzamanlı oluşturma çakışmasın diye API sağlıklı olunca başlar.
   refresher:
     build: ./backend
+    restart: unless-stopped
     env_file: ./backend/.env
-    depends_on: [api]
+    depends_on:
+      api: {condition: service_healthy}
     command: ["sh", "-c", "while true; do python -m scripts.refresh_all; sleep 86400; done"]
+  # HTTPS: API_DOMAIN için Let's Encrypt sertifikasını otomatik alır ve yeniler
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:-localhost}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [api]
 volumes:
   pgdata:
   media:
+  caddy_data:
